@@ -4,10 +4,13 @@ Repositório para o trabalho do Wumpus para a disciplina de Lógica Matemática 
 
 ## Autores
 
--Hericles Gabriel Escoteiro e Silva (hhericles@hotmail.com)
--Jorge Edson Ribeiro da Silva Neto (jorge.ed.ribeiro00@gmail.com)
--Matheus Pontes Agostinho (matheuspontes96@hotmail.com)
--Guido de Lyra Ferrario (guido_ferrario@hotmail.com)
+Hericles Gabriel Escoteiro e Silva (hhericles@hotmail.com)
+
+Jorge Edson Ribeiro da Silva Neto (jorge.ed.ribeiro00@gmail.com)
+
+Matheus Pontes Agostinho (matheuspontes96@hotmail.com)
+
+Guido de Lyra Ferrario (guido_ferrario@hotmail.com)
 
 ## Objetivo
 
