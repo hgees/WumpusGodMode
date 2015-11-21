@@ -31,7 +31,7 @@ max_agent_actions(64).   % Maximum actions per trial allowed by agent
 %   recording the score and time spent running the agent.  The total
 %   score and time are returned in Score and Time (millisecs).
 %
-%   This procedure requires the external definition of two procedures:
+%   This procedure requires the external definition of three procedures:
 %
 %     init_agent: Called after new world is initialized.  Should perform
 %                 any needed agent initialization.
@@ -39,6 +39,11 @@ max_agent_actions(64).   % Maximum actions per trial allowed by agent
 %     run_agent(Percept,Action): Given the current Percept, this procedure
 %                 should return an appropriate Action, which is then
 %                 executed.
+%
+%     wumpusworld(Type,Size): Setup type: random, fig62 or pit3, and size in the range:
+%                   random: 2-9 squares
+%                   fig62: 4 (fixed number of squares)
+%                   pit3: 3-9 squares
 
 start :-
 	evaluate_agent(1,S),
@@ -58,8 +63,11 @@ run_agent_trials(Trials,NextTrial,0) :-
 run_agent_trials(Trials,NextTrial,Score) :-
   NextTrial =< Trials,
   format("Trial ~d~n",[NextTrial]),
-  initialize(random,Percept),
+  wumpusworld(Type,_), % types: random, fig62, pit3
+%   initialize(random,Percept),
 %   initialize(fig62,Percept),
+%   initialize(pit3,Percept),
+  initialize(Type,Percept),
   format("External init_agent...~n"),
   init_agent,                         % needs to be defined externally
   display_world,
@@ -144,31 +152,75 @@ restart([Stench,Breeze,Glitter,no,no]) :-
 % pit(X,Y): there is a pit in square X,Y
 
 initialize_world(fig62) :-
-  retractall(wumpus_world_extent(_)),
-  retractall(wumpus_location(_,_)),
-  retractall(wumpus_health(_)),
-  retractall(gold(_,_)),
-  retractall(pit(_,_)),
-  assert(wumpus_world_extent(4)),
-  assert(wumpus_location(1,3)),
-  assert(wumpus_health(alive)),
-  assert(gold(2,3)),
-  assert(pit(3,1)),
-  assert(pit(3,3)),
-  assert(pit(4,4)).
+  ww_retractall, %retract wumpus, gold and pit
+  %retractall(wumpus_world_extent(_)),
+  %retractall(wumpus_location(_,_)),
+  %retractall(wumpus_health(_)),
+  %retractall(gold(_,_)),
+  %retractall(pit(_,_)),
+  retractall(ww_initial_state(_)),
+  assert(ww_initial_state([])),
+  %assert(wumpus_world_extent(4)),
+  %assert(wumpus_location(1,3)),
+  %assert(wumpus_health(alive)),
+  wumpusworldsize(E), % size extension
+  addto_ww_init_state(wumpus_world_extent(E)), % fig62 size 4
+  addto_ww_init_state(wumpus_location(1,3)),
+  addto_ww_init_state(wumpus_orientation(0)),
+  addto_ww_init_state(wumpus_health(alive)),
+  addto_ww_init_state(wumpus_last_action(nil)),
+  %assert(gold(2,3)),
+  addto_ww_init_state(gold(2,3)),
+  %assert(pit(3,1)),
+  %assert(pit(3,3)),
+  %assert(pit(4,4)).
+  addto_ww_init_state(pit(3,1)),
+  addto_ww_init_state(pit(3,3)),
+  addto_ww_init_state(pit(4,4)),
+  ww_initial_state(L),
+  assert_list(L).
+
+initialize_world(pit3) :-
+  ww_retractall,
+  retractall(ww_initial_state(_)),
+  assert(ww_initial_state([])),
+  wumpusworldsize(E), % size extension, pit3, range [3, 9]
+  addto_ww_init_state(wumpus_world_extent(E)),
+  all_squares(E,AllSqrs),
+  delete(AllSqrs, [1,1], AllSqrs1),  % all squares but [1,1]
+  subtract(AllSqrs1, [[1,2],[2,1]], AllSqrs3), % all squares but [1,1],[2,1],[1,2]
+  random_member([GX,GY], AllSqrs1),  % gold position (only one)
+  addto_ww_init_state(gold(GX,GY)), % addto_ww_init_state(Fact), % Fact =.. [Object|Square], % Fact = pit([X,Y])
+  random_member([PX1,PY1], AllSqrs3),  % pit 1
+  delete(AllSqrs3, [PX1, PY1], Pit1Sqrs),
+  random_member([PX2,PY2], Pit1Sqrs),  % pit 2
+  delete(Pit1Sqrs, [PX2, PY2], Pit2Sqrs),
+  random_member([PX3,PY3], Pit2Sqrs),  % pit 3
+  addto_ww_init_state(pit(PX1,PY1)), % pit 1
+  addto_ww_init_state(pit(PX2,PY2)), % pit 2
+  addto_ww_init_state(pit(PX3,PY3)), % pit 3
+  random_member([WX,WY],AllSqrs1),  % initialize wumpus
+  addto_ww_init_state(wumpus_location(WX,WY)),
+  addto_ww_init_state(wumpus_orientation(0)),
+  addto_ww_init_state(wumpus_health(alive)),
+  addto_ww_init_state(wumpus_last_action(nil)),
+  ww_initial_state(L),
+  assert_list(L).
 
 initialize_world(random) :-
   ww_retractall,
   retractall(ww_initial_state(_)),
   assert(ww_initial_state([])),
-  addto_ww_init_state(wumpus_world_extent(4)),
-  all_squares(4,AllSqrs),
+  wumpusworldsize(E), % size extension, random, range [2, 9]
+  addto_ww_init_state(wumpus_world_extent(E)),
+  all_squares(E,AllSqrs),
   gold_probability(PG),             % place gold
   place_objects(gold,PG,AllSqrs),
-  at_least_one_gold(4),
-  del([1,1],AllSqrs,AllSqrs1),
+  at_least_one_gold(E),
+  delete(AllSqrs, [1,1], AllSqrs1), % all squares but [1,1]
+  %subtract(AllSqrs1, [[1,2],[2,1]], AllSqrs3), % all squares but [1,1],[2,1],[1,2]
   pit_probability(PP),              % place pits
-  place_objects(pit,PP,AllSqrs1),
+  place_objects(pit,PP,AllSqrs1),   % AllSqrs3
   random_member([WX,WY],AllSqrs1),  % initialize wumpus
   addto_ww_init_state(wumpus_location(WX,WY)),
   addto_ww_init_state(wumpus_orientation(0)),
@@ -213,7 +265,7 @@ place_objects(_,_,[]).
 place_objects(Object,P,[Square|Squares]) :-
   maybe(P),   % succeeds with probability P
   !,
-  Fact =.. [Object|Square],
+  Fact =.. [Object|Square], % Fact = pit([X,Y])
   addto_ww_init_state(Fact),
   place_objects(Object,P,Squares).
 
@@ -239,7 +291,7 @@ initialize_agent :-
   assert(agent_arrows(1)),
   assert(agent_score(0)).
 
-
+% retract wumpus, gold and pit
 ww_retractall :-
   retractall(wumpus_world_extent(_)),
   retractall(wumpus_location(_,_)),
@@ -622,22 +674,28 @@ maybe(P):-
     N<P.
 maybe :- maybe(0.5).
 
-% del(X,L1,L2): True if L2 is L1 minus one occurrence of X.
-del(X,[X|L],L).
-
-del(X,[Y|L1],[Y|L2]) :-
-  del(X,L1,L2).
-
-random_member(X, List) :-
-    List \== [],
-    length(List, Len),
-    N is random(Len),
-    nth0(N, List, X).
-
 % assert_list(L): Assert all facts on list L.
-
 assert_list([]).
 
 assert_list([Fact|Facts]) :-
   assert(Fact),
   assert_list(Facts).
+
+% some sizes cannot work
+wumpusworldsize(4) :-
+    wumpusworld(fig62, _).
+
+wumpusworldsize(E) :-
+    wumpusworld(pit3, E),
+    E>=3, E=<9.
+
+wumpusworldsize(4) :-
+    wumpusworld(pit3, _).
+
+wumpusworldsize(E) :-
+    wumpusworld(random, E),
+    E>=2, E=<9. % 2 to 9, ok
+
+wumpusworldsize(4) :-
+    wumpusworld(random, _).
+
