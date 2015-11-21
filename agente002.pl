@@ -44,9 +44,13 @@ restart_agent :-
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-  write('percebi: '), % pode apagar isso se desejar. Imprima somente o necessario.
-  writeln(Percepcao), % apague para limpar a saida. Coloque aqui seu codigo.
-  cabeca_dura(_, Acao).
+  write('percebi: '), 
+  writeln(Percepcao),
+  coragem(Percepcao, Acao). 
 
-cabeca_dura(_, goforward). % "Inteligencia" do agente. Apague este exemplo e faca o seu.
-
+%inteligencia do agente
+coragem([no,no,no,no,_], goforward). %vai pra frente se não sentir perigo 
+coragem([_,_,no,yes,_], turnleft). %vira para a direita se trombar
+coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
+coragem([yes,_,no,_,no], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
+    agent_arrows(1).
