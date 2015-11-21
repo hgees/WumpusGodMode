@@ -31,7 +31,7 @@
 % e faca a consulta (query) na forma:
 % ?- start.
 
-:- load_files([wumpus1]).
+:- load_files([wumpus3]).
 
 init_agent :- % se nao tiver nada para fazer aqui, simplesmente termine com um ponto (.)
 	writeln('Agente iniciando...'). % apague esse writeln e coloque aqui as acoes para iniciar o agente
