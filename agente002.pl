@@ -35,8 +35,7 @@
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
-init_agent :- % se nao tiver nada para fazer aqui, simplesmente termine com um ponto (.)
-	writeln('Agente iniciando...'). % apague esse writeln e coloque aqui as acoes para iniciar o agente
+init_agent.
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -51,8 +50,8 @@ run_agent(Percepcao, Acao) :-
   coragem(Percepcao, Acao). 
 
 %inteligencia do agente
-coragem([_,no,no,no,_], goforward). %vai pra frente se não sentir perigo 
+coragem([no,no,no,no,_], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,_], turnleft). %vira para a direita se trombar
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
-coragem([yes,_,no,_,no], shoot):-  %atira em linha reta se sentir fedor e tiver uma flecha
+coragem([yes,_,no,_,_], shoot):-  %atira em linha reta se sentir fedor e tiver uma flecha
     agent_arrows(1).
