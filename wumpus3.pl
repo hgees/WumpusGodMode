@@ -1,9 +1,45 @@
-% Wumpus World Simulator v1.0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Hunt The Wumpus - World Simulator                                          %
+%    Copyright (C) 2012 - 2016  Ruben Carlo Benante <rcb at beco dot cc>        %
+%                                                                               %
+%    This program is free software; you can redistribute it and/or modify       %
+%    it under the terms of the GNU General Public License as published by       %
+%    the Free Software Foundation; either version 2 of the License, or          %
+%    (at your option) any later version.                                        %
+%                                                                               %
+%    This program is distributed in the hope that it will be useful,            %
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of             %
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              %
+%    GNU General Public License for more details.                               %
+%                                                                               %
+%    You should have received a copy of the GNU General Public License along    %
+%    with this program; if not, write to the Free Software Foundation, Inc.,    %
+%    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Hunt The Wumpus - World Simulator
 %
-% Written by Larry Holder (holder@cse.uta.edu)
+%   Edited, Compiled, Modified by:
+%   Author: 
+%     - Ruben Carlo Benante (rcb@beco.cc)
+%   Copyright: 2012 - 2016
+%   License: GNU GPL Version 2.0
+%
+%   Based on:
+%     - Original by Gregory Yob (1972)
+%     - Larry Holder (accessed version Oct/2005)
+%     - Walter Nauber 09/02/2001
+%     - An Anonymous version of Hunt The Wumpus with menus (aeric? 2012?)
+%
+%   Special thanks to:
+%     - Larry Holder (holder@cse.uta.edu) (version 1.0 and version 2.3)
+%     - Walter Nauber (walter.nauber@tu-dresden.de) (swi-prolog version)
 %
 % A Prolog implementation of the Wumpus world described in Russell and
 % Norvig's "Artificial Intelligence: A Modern Approach", Section 6.2.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Version pit3, by Beco
+%
+% World Models: fig62, random, pit3
 
 :- dynamic([
   wumpus_world_extent/1,
@@ -71,6 +107,7 @@ run_agent_trials(Trials,NextTrial,Score) :-
   format("External init_agent...~n"),
   init_agent,                         % needs to be defined externally
   display_world,
+  !,
   run_agent_trial(1,Percept),
   agent_score(Score1),
   NextTrial1 is NextTrial + 1,
@@ -96,14 +133,18 @@ run_agent_trial(NumActions,_) :-    % agent allowed only N actions as
 
 run_agent_trial(NumActions,Percept) :-
   run_agent(Percept,Action),          % needs to be defined externally
+  check_agent_action(Action),         % check for goforward, turnright, turnleft, shoot, grab or climb.
 %  nl,
   format("~nExternal run_agent(~w,~w)~n", [Percept, Action]),
   execute(Action,Percept1),
   display_world,
   NumActions1 is NumActions + 1,
+  !,
   run_agent_trial(NumActions1,Percept1).
 
-
+run_agent_trial(_,_) :-
+    format("External function run_agent(Percept,Action) failed miserably!~n"),
+    !, fail.
 
 % initialize(Percept): initializes the Wumpus world and our fearless
 %   agent according to the given World and returns the percept from square
@@ -598,6 +639,7 @@ propagate_arrow(X,Y,270,Scream) :-
 propagate_arrow(_,_,_,no).
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % display_world: Displays everything known about the wumpus world,
 
 display_world :-
@@ -674,6 +716,19 @@ maybe(P):-
     N<P.
 maybe :- maybe(0.5).
 
+% del(X,L1,L2): True if L2 is L1 minus one occurrence of X.
+%del(X,[X|L],L).
+%
+%del(X,[Y|L1],[Y|L2]) :-
+%  del(X,L1,L2).
+%
+%random_member(X, List) :-
+%    List \== [],
+%    length(List, Len),
+%    N is random(Len),
+%    nth0(N, List, X).
+
+
 % assert_list(L): Assert all facts on list L.
 assert_list([]).
 
@@ -698,4 +753,18 @@ wumpusworldsize(E) :-
 
 wumpusworldsize(4) :-
     wumpusworld(random, _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check for goforward, turnright, turnleft, shoot, grab or climb.
+check_agent_action(A) :- nonvar(A), !, check_agent_action_which(A), !.
+check_agent_action(_) :- format("Agent gave no actions!~n"), !, fail.
+check_agent_action_which(goforward).
+check_agent_action_which(turnright).
+check_agent_action_which(turnleft).
+check_agent_action_which(shoot).
+check_agent_action_which(grab).
+check_agent_action_which(climb).
+check_agent_action_which(_) :- format("Agent gave unknow action!~n"), !, fail.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
