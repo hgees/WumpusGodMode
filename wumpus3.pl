@@ -41,6 +41,9 @@
 %
 % World Models: fig62, random, pit3
 
+%:- use_module(agente003, [wumpusworld/2, init_agent/0, restart_agent/0, run_agent/2]).
+:- module(wumpus3, [start/0]).
+
 :- dynamic([
   wumpus_world_extent/1,
   wumpus_location/2,
@@ -94,7 +97,8 @@ evaluate_agent(Trials,Score) :-
 %   calls to init_agent and run_agent.
 
 run_agent_trials(Trials,NextTrial,0) :-
-  NextTrial > Trials.
+  NextTrial > Trials,
+  !.
 
 run_agent_trials(Trials,NextTrial,Score) :-
   NextTrial =< Trials,
