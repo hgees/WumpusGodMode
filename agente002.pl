@@ -53,4 +53,4 @@ run_agent(Percepcao, Acao) :-
 coragem([no,no,no,no,_], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,_], turnleft). %vira para a direita se trombar
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
-coragem([yes,_,no,_,no], shoot).  %atira em linha reta se sentir fedor e tiver uma flecha
+coragem([yes,_,no,_,_], shoot). %atira em linha reta se sentir fedor e tiver uma flecha
