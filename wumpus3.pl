@@ -56,13 +56,14 @@
   agent_health/1,
   agent_gold/1,
   agent_arrows/1,
-  agent_score/1
+  agent_score/1,
+  max_agent_actions/1
   ]).
 
 gold_probability(0.10).  % Probability that a location has gold
 pit_probability(0.20).   % Probability that a non-(1,1) location has a pit
 %max_agent_tries(10).     % Maximum agent tries (climb or die) per world
-max_agent_actions(64).   % Maximum actions per trial allowed by agent
+%max_agent_actions(64).   % Maximum actions per trial allowed by agent
 
 % evaluate_agent(Trials,Score,Time): Performs Trials trials, where each
 %   trial involves generating a random wumpus world, initializing the
@@ -146,8 +147,8 @@ run_agent_trial(NumActions,Percept) :-
   !,
   run_agent_trial(NumActions1,Percept1).
 
-run_agent_trial(_,_) :-
-    format("External function run_agent(Percept,Action) failed miserably!~n"),
+run_agent_trial(_,Percept) :-
+    format("External function run_agent(~w, No Action) failed miserably!~n", [Percept]),
     !, fail.
 
 % initialize(Percept): initializes the Wumpus world and our fearless
@@ -209,6 +210,9 @@ initialize_world(fig62) :-
   %assert(wumpus_location(1,3)),
   %assert(wumpus_health(alive)),
   wumpusworldsize(E), % size extension
+  Actions is E * E * 4,                      % 4 actions per square average (fig62 is 2.875 moves per square)
+  retractall(max_agent_actions(Actions)),
+  addto_ww_init_state(max_agent_actions(Actions)), % Maximum actions per trial allowed by agent
   addto_ww_init_state(wumpus_world_extent(E)), % fig62 size 4
   addto_ww_init_state(wumpus_location(1,3)),
   addto_ww_init_state(wumpus_orientation(0)),
@@ -230,6 +234,9 @@ initialize_world(pit3) :-
   retractall(ww_initial_state(_)),
   assert(ww_initial_state([])),
   wumpusworldsize(E), % size extension, pit3, range [3, 9]
+  Actions is E * E * 4,                      % 4 actions per square average (fig62 is 2.875 moves per square)
+  retractall(max_agent_actions(Actions)),
+  addto_ww_init_state(max_agent_actions(Actions)), % Maximum actions per trial allowed by agent
   addto_ww_init_state(wumpus_world_extent(E)),
   all_squares(E,AllSqrs),
   delete(AllSqrs, [1,1], AllSqrs1),  % all squares but [1,1]
@@ -257,6 +264,9 @@ initialize_world(random) :-
   retractall(ww_initial_state(_)),
   assert(ww_initial_state([])),
   wumpusworldsize(E), % size extension, random, range [2, 9]
+  Actions is E * E * 4,                      % 4 actions per square average (fig62 is 2.875 moves per square)
+  retractall(max_agent_actions(Actions)),
+  addto_ww_init_state(max_agent_actions(Actions)), % Maximum actions per trial allowed by agent
   addto_ww_init_state(wumpus_world_extent(E)),
   all_squares(E,AllSqrs),
   gold_probability(PG),             % place gold
