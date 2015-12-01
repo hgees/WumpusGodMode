@@ -35,7 +35,12 @@
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
-init_agent.
+:-dynamic([flecha/1]).
+
+
+init_agent:-
+    retractall(flecha(_)),
+    assert(flecha(1)).
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -56,3 +61,8 @@ coragem([_,_,no,yes,no], turnleft). %vira para a direita se trombar
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,_,_,no,no], shoot). %atira em linha reta se sentir fedor e tiver uma flecha
 
+decflecha :-
+    flecha(X0),
+    X1 is X0 -1,
+    retracll(flecha(_)),
+    assert(flecha(X1)).
