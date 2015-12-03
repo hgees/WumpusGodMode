@@ -32,15 +32,16 @@
 % ?- start.
 
 :- load_files([wumpus3]).
+:-dynamic([flecha/1]).
+:-dynamic([direcao/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
-:-dynamic([flecha/1]).
-
-
 init_agent:-
     retractall(flecha(_)),
-    assert(flecha(1)).
+    assert(flecha(1)),
+    retractall(direcao(_)),
+    assert(direcao(0)).
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -52,12 +53,24 @@ restart_agent :-
 run_agent(Percepcao, Acao) :-
   write('percebi: '), 
   writeln(Percepcao),
-  coragem(Percepcao, Acao).
+  coragem(Percepcao, Acao),
+  direcao(Direcao),
+  write('Direcao: '),
+  writeln(Direcao).
+
+%definindo direcao do agente.
+direcao(0). %agente esta virado para direita.
+% 0 -> direita, 90 -> cima, 180 -> esquerda, 270 -> baixo.
+
+mudadir :-
+    direcao(D0),
+    D1 is D0 + 90,
+    assert(direcao(D1)).
 
 
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
-coragem([_,_,no,yes,no], turnleft). %vira para a direita se trombar
+coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,_,_,no,no], shoot). %atira em linha reta se sentir fedor e tiver uma flecha
 
@@ -66,3 +79,4 @@ decflecha :-
     X1 is X0 -1,
     retracll(flecha(_)),
     assert(flecha(X1)).
+
