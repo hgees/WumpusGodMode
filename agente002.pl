@@ -32,8 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1]).
-:-dynamic([direcao/1]).
+:-dynamic([flecha/1],[direcao/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
