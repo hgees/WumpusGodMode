@@ -79,7 +79,7 @@ mudadir :-
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
-coragem([_,yes,no,no,no],_).
+coragem([_,yes,no,no,no],A).
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
     flecha(1),
