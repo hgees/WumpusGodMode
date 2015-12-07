@@ -37,10 +37,19 @@
 wumpusworld(pit3, 4). %tipo, tamanho
 
 init_agent:-
+    retractall(posicao(_,_)),
+    retractall(caverna(_)),
+    retractall(vida(_)),
+    retractall(ouro(_)),
     retractall(flecha(_)),
-    assert(flecha(1)),
     retractall(direcao(_)),
+    assert(posicao(1,1)),
+    assert(caverna(sim)),
+    assert(vida(ativo)),
+    assert(ouro(0)),
+    assert(flecha(1)),
     assert(direcao(0)).
+
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -70,7 +79,7 @@ mudadir :-
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
-coragem([_,yes,no,no,no],A).
+coragem([_,yes,no,no,no],_).
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
     flecha(1),
