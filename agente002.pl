@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1]).
+:-dynamic([flecha/1,direcao/1,vida/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -43,7 +43,7 @@ init_agent:-
     retractall(ouro(_)),
     retractall(flecha(_)),
     retractall(direcao(_)),
-    assert(posicao(1,1)),
+    assert(posicao([1,1])),
     assert(caverna(sim)),
     assert(vida(ativo)),
     assert(ouro(0)),
