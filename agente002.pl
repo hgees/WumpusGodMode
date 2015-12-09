@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,vida/1]).
+:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -43,12 +43,14 @@ init_agent:-
     retractall(ouro(_)),
     retractall(flecha(_)),
     retractall(direcao(_)),
+    retractall(wumpus(_)),
     assert(posicao([1,1])),
     assert(caverna(sim)),
     assert(vida(ativo)),
     assert(ouro(0)),
     assert(flecha(1)),
-    assert(direcao(0)).
+    assert(direcao(0)),
+    assert(wumpus(1)).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -59,8 +61,11 @@ restart_agent :-
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-  write('percebi: '), 
+  write('Percebi: '), 
   writeln(Percepcao),
+  posicao(Posicao),
+  write('Posição atual: '),
+  writeln(Posicao),
   coragem(Percepcao, Acao),
   direcao(Direcao),
   write('Direcao: '),
@@ -83,8 +88,9 @@ coragem([_,yes,no,no,no],A).
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
     flecha(1),
+    (wumpus(1),
     decflecha, fail.
-coragem([yes,_,_,no,_],gofoward).
+coragem([yes,_,_,no,_], gofoward).
 
 decflecha :-
     flecha(X0),
