@@ -75,11 +75,15 @@ run_agent(Percepcao, Acao) :-
 direcao(0). %agente esta virado para direita.
 % 0 -> direita, 90 -> cima, 180 -> esquerda, 270 -> baixo.
 
-mudadir :-
+mudadiresq :-
     direcao(D0),
-    D1 is D0 + 90,
+    D1 is D0 + 90 mod 360,
     assert(direcao(D1)).
 
+mudadirdir :-
+    direcao(D0),
+    D1 is D0 - 90 mod 360,
+    assert(direcao(D1)).
 
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
