@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1]).
+:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1,posicao[1,1]]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -64,11 +64,11 @@ run_agent(Percepcao, Acao) :-
   write('Percebi: '), 
   writeln(Percepcao),
   posicao(Posicao),
-  write('Posição atual: '),
+  %  write('Posição atual: '),
   writeln(Posicao),
   coragem(Percepcao, Acao),
   direcao(Direcao),
-  write('Direcao: '),
+  %  write('Direcao: '),
   writeln(Direcao).
 
 %definindo direcao do agente.
@@ -85,6 +85,20 @@ mudadirdir :-
     D1 is D0 - 90 mod 360,
     assert(direcao(D1)).
 
+mudacasa(0) :-
+    posicao([X,Y]),
+    X<4,
+    X1 is X+1,
+    retractall(posicao([_|_])),
+    assert(posicao([X1,Y])).
+
+mudacasa(0) :-
+    posicao([X,Y]),
+    Y==4,
+    X1 is X+1,
+    retractall(posicao([_|_])),
+    assert(posicao([X1,Y)).
+
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
@@ -94,9 +108,7 @@ coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tive
     flecha(X),
     X\==0,
     decflecha.
-coragem([yes,_,_,_,_], gofoward) :-  %vai pra frente sesentir fedor e não tiver flechas
-    flecha(X),
-    X==0.
+coragem([yes,_,_,_,yes], gofoward). %vai pra frente sesentir fedor e wumpus estiver morto
 coragem([yes,_,_,no,_], gofoward).
 
 decflecha :-
