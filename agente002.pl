@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1,posicao/2]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/2]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -77,41 +77,71 @@ direcao(0). %agente esta virado para direita.
 
 mudadiresq :-
     direcao(D0),
-    D1 is D0 + 90 mod 360,
-    assert(direcao(D1)).
+    D1 is D0 + 90,
+    D2 is D1 mod 360,
+    retractall(direcao(_)),
+    assert(direcao(D2)).
 
 mudadirdir :-
     direcao(D0),
-    D1 is D0 - 90 mod 360,
-    assert(direcao(D1)).
+    D1 is D0 - 90,
+    D2 is D1 mod 360,
+    retractall(posicao(_)),
+    assert(direcao(D2)).
 
-mudacasa(0) :-
+mudacasa :-
+    angulo(0),
     posicao([X,Y]),
     X<4,
     X1 is X+1,
     retractall(posicao([_|_])),
     assert(posicao([X1,Y])).
 
-mudacasa(0) :-
-    posicao([X,Y]),
-    Y==4,
-    X1 is X+1,
-    retractall(posicao([_|_])),
-    assert(posicao([X1,Y])).
-
-mudacasa(90) :-
+mudacasa :-
+    angulo(90),
     posicao([X,Y]),
     Y<4,
     Y1 is Y+1,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])).
 
-mudacasa(90) :-
+mudacasa :-
+    angulo(180),
     posicao([X,Y]),
-    Y==4,
+    X>1,
+    X1 is X+1,
+    retractall(posicao([_|_])),
+    assert(posicao([X1,Y])).
+
+mudacasa :-
+    angulo(270),
+    posicao([X,Y]),
+    Y>1,
     Y1 is Y,
     retractall,(posicao([_|_])),
     assert(posicao([X,Y1])).
+
+mudacasa.
+
+segura([no,no,_,_,_]) :- 
+    seguras(K),
+    posicao([S,L]),
+    angulo(0),
+    Z is S + 1,
+    S<4,
+    append(K,[[Z,L]], F),
+    retractall(seguras(_)),
+    assert(seguras(F)).
+
+segura([no,no,_,_,_]) :-
+    seguras(K),
+    posicao([S,L]),
+    angulo(90),
+    Z is L + 1,
+    L<4,
+    append(K,[[S,Z]],F),
+    retractall(seguras(_)),
+    assert(seguras(F)).
 
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
