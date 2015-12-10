@@ -84,17 +84,20 @@ mudadir :-
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
-coragem([_,yes,no,no,no],A).
+%coragem([_,yes,no,no,no],A)
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
-    flecha(1),
-    (wumpus(1),
-    decflecha, fail.
+    flecha(X),
+    X\==0,
+    decflecha.
+coragem([yes,_,_,_,_], gofoward) :-  %vai pra frente sesentir fedor e não tiver flechas
+    flecha(X),
+    X==0.
 coragem([yes,_,_,no,_], gofoward).
 
 decflecha :-
     flecha(X0),
-    X1 is X0 -1,
+    X1 is X0-1,
     retractall(flecha(_)),
     assert(flecha(X1)).
 
