@@ -99,6 +99,20 @@ mudacasa(0) :-
     retractall(posicao([_|_])),
     assert(posicao([X1,Y)).
 
+mudacasa(90) :-
+    posicao([X,Y]),
+    Y<4,
+    Y1 is Y+1,
+    retractall(posicao([_|_])),
+    assert(posicao([X,Y1])).
+
+mudacasa(90) :-
+    posicao([X,Y]),
+    Y==4,
+    Y1 is Y,
+    retractall,(posicao([_|_])),
+    assert(posicao((X,Y1])).
+
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
 coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
