@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1,posicao[1,1]]).
+:-dynamic([flecha/1,direcao/1,vida/1,wumpus/1,posicao/2]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -97,7 +97,7 @@ mudacasa(0) :-
     Y==4,
     X1 is X+1,
     retractall(posicao([_|_])),
-    assert(posicao([X1,Y)).
+    assert(posicao([X1,Y])).
 
 mudacasa(90) :-
     posicao([X,Y]),
@@ -111,7 +111,7 @@ mudacasa(90) :-
     Y==4,
     Y1 is Y,
     retractall,(posicao([_|_])),
-    assert(posicao((X,Y1])).
+    assert(posicao([X,Y1])).
 
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
