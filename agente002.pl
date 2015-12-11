@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/2]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -64,11 +64,11 @@ run_agent(Percepcao, Acao) :-
   write('Percebi: '), 
   writeln(Percepcao),
   posicao(Posicao),
-  %  write('Posição atual: '),
+  write('Posição atual: '),
   writeln(Posicao),
   coragem(Percepcao, Acao),
   direcao(Direcao),
-  %  write('Direcao: '),
+  write('Direcao: '),
   writeln(Direcao).
 
 %definindo direcao do agente.
@@ -118,12 +118,18 @@ mudacasa :-
     posicao([X,Y]),
     Y>1,
     Y1 is Y,
-    retractall,(posicao([_|_])),
+    retractall(posicao([_|_])),
     assert(posicao([X,Y1])).
 
-mudacasa.
+mudacasa :-
+    angulo(270),
+    posicao([X,Y]),
+    Y==1,
+    Y1 is Y,
+    retractall(posicao([_|_])),
+    assert(posicao([X,Y1])).
 
-segura([no,no,_,_,_]) :- 
+casasegura([no,no,_,_,_]) :- 
     seguras(K),
     posicao([S,L]),
     angulo(0),
@@ -133,7 +139,7 @@ segura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
-segura([no,no,_,_,_]) :-
+casasegura([no,no,_,_,_]) :-
     seguras(K),
     posicao([S,L]),
     angulo(90),
@@ -143,21 +149,28 @@ segura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
-%inteligencia do agente
-coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
-coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
-%coragem([_,yes,no,no,no],A)
-coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
-coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
-    flecha(X),
-    X\==0,
-    decflecha.
-coragem([yes,_,_,_,yes], gofoward). %vai pra frente sesentir fedor e wumpus estiver morto
-coragem([yes,_,_,no,_], gofoward).
-
-decflecha :-
+decflecha:-
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
     assert(flecha(X1)).
+
+%inteligencia do agente
+coragem([_,_,no,no,_], goforward) :-
+    mudadiresq,
+    mudacasa.
+coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
+coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
+%coragem([_,yes,no,no,no],A)
+coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
+coragem([_,_,_,_,yes],_). %nao atirar quando ouvir o grito
+coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
+    flecha(X),
+    X\==0,
+    decflecha.
+coragem([yes,_,_,_,yes], goforward). %vai pra frente sesentir fedor e wumpus estiver morto
+coragem([yes,_,_,no,_], goforward).
+coragem([_,yes,_,no,_], turnleft) :-
+    mudadiresq,
+    mudadiresq.
 
