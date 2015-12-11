@@ -55,21 +55,22 @@ init_agent:-
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
-	init_agent.
+    init_agent.
 
 % esta e a funcao chamada pelo simulador. Nao altere a "cabeca" da funcao. Apenas o corpo.
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-  write('Percebi: '), 
-  writeln(Percepcao),
-  posicao(Posicao),
-  write('Posição atual: '),
-  writeln(Posicao),
-  coragem(Percepcao, Acao),
-  direcao(Direcao),
-  write('Direcao: '),
-  writeln(Direcao).
+    write('Percebi: '), 
+    writeln(Percepcao),
+    posicao(Posicao),
+    write('Posição atual: '),
+    writeln(Posicao),
+    coragem(Percepcao, Acao),
+    adjacentes(Posicao, L),
+    direcao(Direcao),
+    write('Direcao: '),
+    writeln(Direcao).
 
 %definindo direcao do agente.
 direcao(0). %agente esta virado para direita.
@@ -174,3 +175,113 @@ coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
     mudadiresq.
 
+
+cima([H, T], L1):-
+    T1 is T+1,
+    L1=[H, T1].
+
+baixo([H, T], L2):-
+    T2 is T-1,
+    L2=[H, T2].
+
+esquerda([H, T], L3):-
+    H2 is H-1,
+    L3=[H2, T].
+
+direita([H, T], L4):-
+    H1 is H+1,
+    L4=[H1, T].
+
+
+adjacentes([H, T], L):-
+    H\==1,
+    H\==4,
+    T\==1,
+    T\==4,
+    cima([H, T], L1),
+    baixo([H, T], L2),
+    esquerda([H, T], L3),
+    direita([H, T], L4),
+    L=[L1, L2, L3, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H==1,
+    T==1,
+    cima([H, T], L1),
+    direita([H, T], L4),
+    L=[L1, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H==4,
+    T==1,
+    cima([H, T], L1),
+    esquerda([H, T], L3),
+    L=[L1, L3],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H==1,
+    T==4,
+    direita([H, T], L4),
+    baixo([H, T], L2),
+    L=[L2, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H==4,
+    T==4,
+    baixo([H, T], L2),
+    esquerda([H, T], L3),
+    L=[L2, L3],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H\==1,
+    H\==4,
+    T==1,
+    esquerda([H, T], L3),
+    direita([H, T], L4),
+    cima([H, T], L1),
+    L=[L1, L3, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    H\==1,
+    H\==4,
+    T==4,
+    esquerda([H, T], L3),
+    direita([H, T], L4),
+    baixo([H, T], L2),
+    L=[L2, L3, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    T\==1,
+    T\==4,
+    H==1,
+    cima([H, T], L1),
+    direita([H, T], L4),
+    baixo([H, T], L2),
+    L=[L1, L2, L4],
+    write('Adjacentes: '),
+    writeln(L).
+
+adjacentes([H, T], L):-
+    T\==1,
+    T\==4,
+    H==4,
+    cima([H,T], L1),
+    esquerda([H, T], L3),
+    baixo([H, T], L2),
+    L=[L1, L2, L3],
+    write('Adjacentes: '),
+    writeln(L).
