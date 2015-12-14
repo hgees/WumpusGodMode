@@ -76,14 +76,14 @@ run_agent(Percepcao, Acao) :-
 direcao(0). %agente esta virado para direita.
 % 0 -> direita, 90 -> cima, 180 -> esquerda, 270 -> baixo.
 
-mudadiresq :-
+mudadiresq :- %mudanca da direcao para a esquerda (angulo maior em relacao ao inicial)
     direcao(D0),
     D1 is D0 + 90,
     D2 is D1 mod 360,
     retractall(direcao(_)),
     assert(direcao(D2)).
 
-mudadirdir :-
+mudadirdir :- %diminui o angulo da direcao
     direcao(D0),
     D1 is D0 - 90,
     D2 is D1 mod 360,
@@ -150,7 +150,7 @@ casasegura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
-decflecha:-
+decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
@@ -160,23 +160,33 @@ decflecha:-
 coragem([_,_,no,no,_], goforward) :-
     mudadiresq,
     mudacasa.
+
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
+
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
     mudadiresq.
+
 %coragem([_,yes,no,no,no],A)
+%
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
+
 coragem([_,_,_,_,yes],_). %nao atirar quando ouvir o grito
+
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
     flecha(X),
     X\==0,
     decflecha.
+
 coragem([yes,_,_,_,yes], goforward). %vai pra frente sesentir fedor e wumpus estiver morto
+
 coragem([yes,_,_,no,_], goforward).
+
 coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
     mudadiresq.
 
 
+%funcoes para calcular as casas adjacentes
 cima([H, T], L1):-
     T1 is T+1,
     L1=[H, T1].
@@ -286,3 +296,4 @@ adjacentes([H, T], L):-
     L=[L1, L2, L3],
     write('Adjacentes: '),
     writeln(L).
+
