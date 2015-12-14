@@ -118,7 +118,7 @@ mudacasa :-
     angulo(270),
     posicao([X,Y]),
     Y>1,
-    Y1 is Y,
+    Y1 is Y-1,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])).
 
@@ -161,7 +161,8 @@ coragem([_,_,no,no,_], goforward) :-
     mudadiresq,
     mudacasa.
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
-coragem([_,_,no,yes,no], turnleft). %vira para a esquerda se trombar
+coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
+    mudadiresq.
 %coragem([_,yes,no,no,no],A)
 coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
 coragem([_,_,_,_,yes],_). %nao atirar quando ouvir o grito
