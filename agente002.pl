@@ -72,7 +72,7 @@ run_agent(Percepcao, Acao) :-
     write('Direcao: '), %informa a direcao do agente
     writeln(Direcao),
     ouro(O),
-    write('Numero de ouro: '),
+    write('Numero de ouro: '), %informa o numero de ouro do agente
     writeln(O).
 
 %definindo direcao do agente.
