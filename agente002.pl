@@ -44,13 +44,13 @@ init_agent:-
     retractall(flecha(_)),
     retractall(direcao(_)),
     retractall(wumpus(_)),
-    assert(posicao([1,1])),
-    assert(caverna(sim)),
-    assert(vida(ativo)),
-    assert(ouro(0)),
-    assert(flecha(1)),
-    assert(direcao(0)),
-    assert(wumpus(1)).
+    assert(posicao([1,1])), %agente inicia na casa [1,1]
+    assert(caverna(sim)),  %agente esta na caverna
+    assert(vida(ativo)), %agente esta vivo
+    assert(ouro(0)), %agente inicia sem o ouro
+    assert(flecha(1)), %agente inicia com uma flecha.
+    assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
+    assert(wumpus(1)). %wumpus inicia vivo
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -90,7 +90,7 @@ mudadirdir :- %diminui o angulo da direcao
     retractall(posicao(_)),
     assert(direcao(D2)).
 
-mudacasa :-
+mudacasa :- %funcoes para calcular a posicao do agente
     angulo(0),
     posicao([X,Y]),
     X<4,
