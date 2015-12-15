@@ -50,7 +50,7 @@ init_agent:-
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
-    assert(wumpus(1)). %wumpus inicia vivo
+    assert(wumpus(vivo)). %wumpus inicia vivo
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -73,7 +73,13 @@ run_agent(Percepcao, Acao) :-
     writeln(Direcao),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente
-    writeln(O).
+    writeln(O),
+    wumpus(V),
+    write('Saude do Wumpus: '),
+    writeln(V),
+    flecha(F),
+    write('Flechas disponiveis: '),
+    writeln(F).
 
 %definindo direcao do agente.
 direcao(0). %agente esta virado para direita.
@@ -175,12 +181,16 @@ coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
     retractall(ouro(_)),
     assert(ouro(1)).
 
-coragem([_,_,_,_,yes],_). %nao atirar quando ouvir o grito
+coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito
+    retractall(wumpus(_)),
+    assert(wumpus(morto)).
 
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
     flecha(X),
     X\==0,
-    decflecha.
+    decflecha,
+    retractall(flecha(_)),
+    assert(flecha(0)).
 
 coragem([yes,_,_,_,yes], goforward). %vai pra frente sesentir fedor e wumpus estiver morto
 
