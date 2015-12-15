@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -61,16 +61,19 @@ restart_agent :-
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-    write('Percebi: '), 
+    write('Percebi: '), %diz o que o agente percebeu (sentiu)
     writeln(Percepcao),
-    posicao(Posicao),
-    write('Posição atual: '),
-    writeln(Posicao),
+    posicao(P),
+    write('Posição atual: '), %informa a casa atual do agente
+    writeln(P),
     coragem(Percepcao, Acao),
-    adjacentes(Posicao, L),
+    adjacentes(P, L),
     direcao(Direcao),
-    write('Direcao: '),
-    writeln(Direcao).
+    write('Direcao: '), %informa a direcao do agente
+    writeln(Direcao),
+    ouro(O),
+    write('Numero de ouro: '),
+    writeln(O).
 
 %definindo direcao do agente.
 direcao(0). %agente esta virado para direita.
@@ -159,7 +162,7 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
 %inteligencia do agente
 coragem([_,_,no,no,_], goforward) :-
     mudadiresq,
-    mudacasa.
+    mudacasa([X,Y]).
 
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
     
@@ -168,7 +171,9 @@ coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
 
 %coragem([_,yes,no,no,no],A)
 %
-coragem([_,_,yes,_,_], grab). %pega o ouro se sentir o brilho
+coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
+    retractall(ouro(_)),
+    assert(ouro(1)).
 
 coragem([_,_,_,_,yes],_). %nao atirar quando ouvir o grito
 
@@ -185,6 +190,12 @@ coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
     mudadiresq.
 
+coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro.
+    posicao([1,1]),
+    ouro(1).
+coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto.
+    posicao([1,1]),
+    wumpus(morto).
 
 %funcoes para calcular as casas adjacentes
 cima([H, T], L1):-
