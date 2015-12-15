@@ -37,7 +37,7 @@
 wumpusworld(pit3, 4). %tipo, tamanho
 
 init_agent:-
-    retractall(posicao(_,_)),
+    retractall(posicao(_)),
     retractall(caverna(_)),
     retractall(vida(_)),
     retractall(ouro(_)),
@@ -162,7 +162,7 @@ coragem([_,_,no,no,_], goforward) :-
     mudacasa.
 
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
-
+    
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
     mudadiresq.
 
@@ -179,7 +179,7 @@ coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tive
 
 coragem([yes,_,_,_,yes], goforward). %vai pra frente sesentir fedor e wumpus estiver morto
 
-coragem([yes,_,_,no,_], goforward).
+coragem([_,no,no,no,_], goforward). %vai para frente se nao trombar, sentir o vento ou sentir o brilho
 
 coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
