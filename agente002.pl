@@ -75,15 +75,15 @@ run_agent(Percepcao, Acao) :-
     write('Numero de ouro: '), %informa o numero de ouro do agente
     writeln(O),
     wumpus(V),
-    write('Saude do Wumpus: '),
+    write('Saude do Wumpus: '), %informa a condicao do wumpus
     writeln(V),
     flecha(F),
-    write('Flechas disponiveis: '),
+    write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro
     writeln(F).
 
 %definindo direcao do agente.
 direcao(0). %agente esta virado para direita.
-% 0 -> direita, 90 -> cima, 180 -> esquerda, 270 -> baixo.
+% 0-> direita, 90-> cima, 180-> esquerda, 270-> baixo.
 
 mudadiresq :- %mudanca da direcao para a esquerda (angulo maior em relacao ao inicial)
     direcao(D0),
@@ -168,7 +168,7 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
 %inteligencia do agente
 coragem([_,_,no,no,_], goforward) :-
     mudadiresq,
-    mudacasa([X,Y]).
+    mudacasa([X]).
 
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
     
@@ -181,11 +181,12 @@ coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
     retractall(ouro(_)),
     assert(ouro(1)).
 
-coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito
+coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
 
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
+    wumpus(vivo),
     flecha(X),
     X\==0,
     decflecha,
