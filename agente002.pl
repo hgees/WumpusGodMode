@@ -61,25 +61,31 @@ restart_agent :-
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-    write('Percebi: '), %diz o que o agente percebeu (sentiu)
+    write('Percebi: '), %diz o que o agente percebeu (sentiu) (ok)
     writeln(Percepcao),
     posicao(P),
     write('Posição atual: '), %informa a casa atual do agente
     writeln(P),
     coragem(Percepcao, Acao),
-    adjacentes(P, L),
     direcao(Direcao),
     write('Direcao: '), %informa a direcao do agente
     writeln(Direcao),
+    adjacentes(P, L),
+    write('Casas Adjacentes: '), %informa as casas adjacentes
+    writeln(L),
     ouro(O),
-    write('Numero de ouro: '), %informa o numero de ouro do agente
+    write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
     writeln(O),
     wumpus(V),
-    write('Saude do Wumpus: '), %informa a condicao do wumpus
+    write('Saude do Wumpus: '), %informa a condicao do wumpus (ok)
     writeln(V),
     flecha(F),
-    write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro
+    write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro (ok)
     writeln(F).
+%casa a frente
+%casas visitadas
+%casas seguras
+%casas perigosas (adicionar estas funcoes).
 
 %definindo direcao do agente.
 direcao(0). %agente esta virado para direita.
@@ -99,8 +105,9 @@ mudadirdir :- %diminui o angulo da direcao
     retractall(posicao(_)),
     assert(direcao(D2)).
 
-mudacasa :- %funcoes para calcular a posicao do agente
-    angulo(0),
+mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
+    direcao(Angulo),
+    Angulo == 0,
     posicao([X,Y]),
     X<4,
     X1 is X+1,
@@ -108,7 +115,8 @@ mudacasa :- %funcoes para calcular a posicao do agente
     assert(posicao([X1,Y])).
 
 mudacasa :-
-    angulo(90),
+    direcao(Angulo),
+    Angulo == 90,
     posicao([X,Y]),
     Y<4,
     Y1 is Y+1,
@@ -116,7 +124,8 @@ mudacasa :-
     assert(posicao([X,Y1])).
 
 mudacasa :-
-    angulo(180),
+    direcao(Angulo),
+    Angulo == 180,
     posicao([X,Y]),
     X>1,
     X1 is X+1,
@@ -124,7 +133,8 @@ mudacasa :-
     assert(posicao([X1,Y])).
 
 mudacasa :-
-    angulo(270),
+    direcao(Angulo),
+    Angulo == 270,
     posicao([X,Y]),
     Y>1,
     Y1 is Y-1,
@@ -159,33 +169,33 @@ casasegura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
-decflecha:- %funcao para diminuir numero de flechas apos o tiro
+decflecha:- %funcao para diminuir numero de flechas apos o tiro (ok)
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
     assert(flecha(X1)).
 
 %inteligencia do agente
-coragem([_,_,no,no,_], goforward) :-
+coragem([_,_,no,no,_], goforward) :- 
     mudadiresq,
     mudacasa([X]).
 
-coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo 
+coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo  
     
-coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
+coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar 
     mudadiresq.
 
 %coragem([_,yes,no,no,no],A)
 %
-coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
+coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho (ok)
     retractall(ouro(_)),
     assert(ouro(1)).
 
-coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
+coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto (ok)
     retractall(wumpus(_)),
     assert(wumpus(morto)).
 
-coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor e tiver uma flecha
+coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha (ok)
     wumpus(vivo),
     flecha(X),
     X\==0,
@@ -201,10 +211,10 @@ coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
     mudadiresq.
 
-coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro.
+coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro. (ok)
     posicao([1,1]),
     ouro(1).
-coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto.
+coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto. (ok)
     posicao([1,1]),
     wumpus(morto).
 
@@ -235,45 +245,35 @@ adjacentes([H, T], L):-
     baixo([H, T], L2),
     esquerda([H, T], L3),
     direita([H, T], L4),
-    L=[L1, L2, L3, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L2, L3, L4].
 
 adjacentes([H, T], L):-
     H==1,
     T==1,
     cima([H, T], L1),
     direita([H, T], L4),
-    L=[L1, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L4].
 
 adjacentes([H, T], L):-
     H==4,
     T==1,
     cima([H, T], L1),
     esquerda([H, T], L3),
-    L=[L1, L3],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L3].
 
 adjacentes([H, T], L):-
     H==1,
     T==4,
     direita([H, T], L4),
     baixo([H, T], L2),
-    L=[L2, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L2, L4].
 
 adjacentes([H, T], L):-
     H==4,
     T==4,
     baixo([H, T], L2),
     esquerda([H, T], L3),
-    L=[L2, L3],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L2, L3].
 
 adjacentes([H, T], L):-
     H\==1,
@@ -282,9 +282,7 @@ adjacentes([H, T], L):-
     esquerda([H, T], L3),
     direita([H, T], L4),
     cima([H, T], L1),
-    L=[L1, L3, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L3, L4].
 
 adjacentes([H, T], L):-
     H\==1,
@@ -293,9 +291,7 @@ adjacentes([H, T], L):-
     esquerda([H, T], L3),
     direita([H, T], L4),
     baixo([H, T], L2),
-    L=[L2, L3, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L2, L3, L4].
 
 adjacentes([H, T], L):-
     T\==1,
@@ -304,9 +300,7 @@ adjacentes([H, T], L):-
     cima([H, T], L1),
     direita([H, T], L4),
     baixo([H, T], L2),
-    L=[L1, L2, L4],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L2, L4].
 
 adjacentes([H, T], L):-
     T\==1,
@@ -315,7 +309,5 @@ adjacentes([H, T], L):-
     cima([H,T], L1),
     esquerda([H, T], L3),
     baixo([H, T], L2),
-    L=[L1, L2, L3],
-    write('Adjacentes: '),
-    writeln(L).
+    L=[L1, L2, L3].
 
