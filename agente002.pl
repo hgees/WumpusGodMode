@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,casasperigosas/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -49,7 +49,7 @@ init_agent:-
     retractall(casaanterior(_)),
     retractall(seguras(_)),
     retractall(visitadas(_)),
-    %    retracatll(perigosas(_)),
+    retractall(perigosas(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -57,12 +57,12 @@ init_agent:-
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
     assert(wumpus(vivo)), %wumpus inicia vivo
-    assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
-    assert(frente([2,1])), %informa a casa a frente do agente, dependendo de sua orientacao
-    assert(casaanterior([0,1])),%início de casas anteriores
-    assert(seguras([1,1])), %informa as casas que sao seguras
-    assert(visitadas([1,1])). %informa as casas em que o agente ja esteve
-    %    assert(perigosas([])). %informa as casas que oferecem risco ao agente
+    assert(casafrente([])), %agente inicia virado para direita e na casa [1,1]
+    assert(frente([])), %informa a casa a frente do agente, dependendo de sua orientacao
+    assert(casaanterior([])),%início de casas anteriores
+    assert(seguras([])), %informa as casas que sao seguras
+    assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
+    assert(perigosas([])). %informa as casas que oferecem risco ao agente
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -97,9 +97,11 @@ run_agent(Percepcao, Acao) :-
     visitadas(Cv),
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
-    %    perigosas(Cp),
-    %    write('Lista de casas perigosas: '), %informa as casas perigosas
-    %    writeln(Cp),
+    casasvisitadas,
+    perigosas(Cp),
+    write('Lista de casas perigosas: '), %informa as casas perigosas
+    writeln(Cp),
+    casasperigosas,
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
@@ -241,15 +243,16 @@ casasvisitadas :- %funcao que salva casas visitadas
    retractall(visitadas(_)),
    assert(visitadas(Fui)).
 
-%casasperigosas :- %funcao para calcular casas que oferecem risco
-%  perigosas(P),
-%  adjacentes(A),
-%  seguras(S),
-%  posicao(C),
-%  retractall(perigosas(_)),
-%  subtract(A,S,P1),
-%  append(C,P1,P2),
-%  assert(perigosas(P4)).
+casasperigosas :- %funcao para calcular casas que oferecem risco
+   perigosas(P),
+   posicao(MinhaCasa),
+   adjacentes(MinhaCasa, A),
+   seguras(S),
+   posicao(C),
+   retractall(perigosas(_)),
+   subtract(S,A,P1),
+   append(C,P1,P2),
+   assert(perigosas(P2)).
 
 casasegura([no,no,_,_,_]) :- 
     seguras(K),
@@ -291,12 +294,14 @@ casasegura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
+
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
     assert(flecha(X1)).
 
+%remover acoes de goforward, e deixar o agente andar pelas gasas seguras (deixar so pegar o ouro e sair).
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo  
     mudacasa,
@@ -331,9 +336,10 @@ coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o v
     mudacasa,
     casasvisitadas.
 
-coragem([_,yes,_,no,_], turnleft) :- %dar meia volta ao sentir o vento
+coragem([_,yes,_,_,_], turnleft) :- %dar meia volta ao sentir o vento
     mudadiresq,
-    mudadiresq.
+    mudadiresq,
+    casasperigosas.
 
 coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro
     posicao([1,1]),
@@ -358,7 +364,6 @@ esquerda([H, T], L3):-
 direita([H, T], L4):-
     H1 is H+1,
     L4=[H1, T].
-
 
 adjacentes([H, T], L):-
     H\==1,
