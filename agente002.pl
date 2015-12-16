@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -44,13 +44,17 @@ init_agent:-
     retractall(flecha(_)),
     retractall(direcao(_)),
     retractall(wumpus(_)),
+    retractall(casafrente(_)),
+    retractall(frente(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
-    assert(wumpus(vivo)). %wumpus inicia vivo
+    assert(wumpus(vivo)), %wumpus inicia vivo
+    assert(casafrente([2,1])), %agente inicia virado par direita e na casa [1,1]
+    assert(frente([2,1])).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -73,6 +77,9 @@ run_agent(Percepcao, Acao) :-
     adjacentes(P, L),
     write('Casas Adjacentes: '), %informa as casas adjacentes
     writeln(L),
+    frente(Af),
+    write('A casa a frente e: '),
+    writeln(Af),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
     writeln(O),
@@ -112,8 +119,11 @@ mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
     X<4,
     X1 is X+1,
     retractall(posicao([_|_])),
-    assert(posicao([X1,Y])).
-
+    assert(posicao([X1,Y])),
+    retractall(frente(_)),
+    X2 is X+1,
+    assert(frente([X2,Y])).
+    
 mudacasa :-
     direcao(Angulo),
     Angulo == 90,
@@ -121,16 +131,22 @@ mudacasa :-
     Y<4,
     Y1 is Y+1,
     retractall(posicao([_|_])),
-    assert(posicao([X,Y1])).
+    assert(posicao([X,Y1])),
+    retractall(frente(_)),
+    Y2 is Y+2,
+    assert(frente([X,Y2])).
 
 mudacasa :-
     direcao(Angulo),
     Angulo == 180,
     posicao([X,Y]),
     X>1,
-    X1 is X+1,
+    X1 is X-1,
     retractall(posicao([_|_])),
-    assert(posicao([X1,Y])).
+    assert(posicao([X1,Y])),
+    retractall(frente(_)),
+    X2 is X-2,
+    assert(frente([X2,Y])).
 
 mudacasa :-
     direcao(Angulo),
@@ -139,7 +155,10 @@ mudacasa :-
     Y>1,
     Y1 is Y-1,
     retractall(posicao([_|_])),
-    assert(posicao([X,Y1])).
+    assert(posicao([X,Y1])),
+    retractall(frente(_)),
+    Y2 is Y-2,
+    assert(frente([X,Y2])).
 
 mudacasa :-
     angulo(270),
@@ -148,6 +167,42 @@ mudacasa :-
     Y1 is Y,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])).
+
+casafrente :- %funcao para calcular casa a frente, dependendo da direcao do agente
+    direcao(Angulo),
+    Angulo == 0,
+    frente([X,Y]),
+    retractall([_]),
+    X1 is X+1,
+    Y1 is Y-1,
+    assert(frente([X1,Y1])).
+
+casafrente :-
+    direcao(Angulo),
+    Angulo == 90,
+    frente([X,Y]),
+    retractall([_]),
+    X1 is X+1,
+    Y1 is Y+1,
+    assert(frente([X1,Y1])).
+
+casafrente :-
+    direcao(Angulo),
+    Angulo == 180,
+    frente([X,Y]),
+    retractall([_]),
+    X1 is X-1,
+    Y1 is Y+1,
+    assert(frente([X1,Y1])).
+
+casafrente :-
+    direcao(Angulo),
+    Angulo == 270,
+    frente([X,Y]),
+    retractall([_]),
+    X1 is X-1,
+    Y1 is Y-1,
+    assert(frente([X1,Y1])).
 
 casasegura([no,no,_,_,_]) :- 
     seguras(K),
