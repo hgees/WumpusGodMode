@@ -47,16 +47,18 @@ init_agent:-
     retractall(casafrente(_)),
     retractall(frente(_)),
     retractall(casaanterior(_)),
+    retractall(seguras(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
-assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
-assert(wumpus(vivo)), %wumpus inicia vivo
-assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
-assert(frente([2,1])),
-assert(casaanterior([0,1])).%início de casas anteriores
+    assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
+    assert(wumpus(vivo)), %wumpus inicia vivo
+    assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
+    assert(frente([2,1])),
+    assert(casaanterior([0,1])),%início de casas anteriores
+    assert(seguras([1,1])).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -80,8 +82,14 @@ run_agent(Percepcao, Acao) :-
     write('Casas Adjacentes: '), %informa as casas adjacentes
     writeln(L),
     frente(Af),
-    write('A casa a frente e: '),
+    write('A casa a frente e: '), %informa a casa a frente, dependendo da direcao do agente
     writeln(Af),
+    casaanterior(Ca),
+    write('A casa anterior era: '), %informa a ultima casa que o agente esteve
+    writeln(Ca),
+    seguras(Cs),
+    write('Lista de casas seguras: '), %informa as casas que nao orferecem risco ao agente
+    writeln(Cs),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
     writeln(O),
@@ -91,7 +99,6 @@ run_agent(Percepcao, Acao) :-
     flecha(F),
     write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro (ok)
     writeln(F).
-%casa a frente
 %casas visitadas
 %casas seguras
 %casas perigosas (adicionar estas funcoes).
@@ -119,6 +126,8 @@ mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
     Angulo == 0,
     posicao([X,Y]),
     X<4,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])),
     X1 is X+1,
     retractall(posicao([_|_])),
     assert(posicao([X1,Y])),
@@ -131,6 +140,8 @@ mudacasa :-
     Angulo == 90,
     posicao([X,Y]),
     Y<4,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])),
     Y1 is Y+1,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])),
@@ -143,6 +154,8 @@ mudacasa :-
     Angulo == 180,
     posicao([X,Y]),
     X>1,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])),
     X1 is X-1,
     retractall(posicao([_|_])),
     assert(posicao([X1,Y])),
@@ -155,6 +168,8 @@ mudacasa :-
     Angulo == 270,
     posicao([X,Y]),
     Y>1,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])),
     Y1 is Y-1,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])),
@@ -163,26 +178,17 @@ mudacasa :-
     assert(frente([X,Y2])).
 
 mudacasa :-
-    angulo(270),
     posicao([X,Y]),
-    Y==1,
-    Y1 is Y,
-    retractall(posicao([_|_])),
-    assert(posicao([X,Y1])).
-
-agora:- % funcao onde o agente vai saber onde está. (direcao)
-    direcao(Direcao),
-    Direcao == 0,
-    casaatual([X,Y]),
-    X < 4,
     retractall(casaanterior(_)),
-    assert(casaanterior([X,Y])),
-    retractall(casaatual(_)),
-    retractall(frente(_)),
-    X1 is X+1,
-    X2 is X+2,
-    assert(casaatual([X1,Y])),
-    assert(frente([X2,Y])).
+    assert(casaanterior([X,Y])).
+
+antes :-
+    posicao([X,Y]),
+    casaanterior([A,B]),
+    X==A,
+    Y==B,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])).
 
 casafrente :- %funcao para calcular casa a frente, dependendo da direcao do agente
     direcao(Angulo),
@@ -249,7 +255,7 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro (ok)
 %inteligencia do agente
 coragem([_,_,no,no,_], goforward) :- 
     mudadiresq,
-    mudacasa([X]).
+    mudacasa.
 
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo  
 
