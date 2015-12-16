@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -49,7 +49,7 @@ init_agent:-
     retractall(casaanterior(_)),
     retractall(seguras(_)),
     retractall(visitadas(_)),
-    %retracatll(perigosas(_)),
+    %    retracatll(perigosas(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -58,11 +58,11 @@ init_agent:-
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
     assert(wumpus(vivo)), %wumpus inicia vivo
     assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
-    assert(frente([2,1])),
+    assert(frente([2,1])), %informa a casa a frente do agente, dependendo de sua orientacao
     assert(casaanterior([0,1])),%início de casas anteriores
-    assert(seguras([1,1])),
-    assert(visitadas([1,1])).
-    %assert(perigosas([])).
+    assert(seguras([1,1])), %informa as casas que sao seguras
+    assert(visitadas([1,1])). %informa as casas em que o agente ja esteve
+    %    assert(perigosas([])). %informa as casas que oferecem risco ao agente
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -97,8 +97,8 @@ run_agent(Percepcao, Acao) :-
     visitadas(Cv),
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
-    %perigosas(Cp),
-    %write('Lista de casas perigosas: '), %informa as casas perigosas
+    %    perigosas(Cp),
+    %    write('Lista de casas perigosas: '), %informa as casas perigosas
     %    writeln(Cp),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
@@ -118,17 +118,15 @@ direcao(0). %agente esta virado para direita.
 
 mudadiresq :- %mudanca da direcao para a esquerda (angulo maior em relacao ao inicial)
     direcao(D0),
-    D1 is D0 + 90,
-    D2 is D1 mod 360,
+    D1 is (D0+90) mod 360,
     retractall(direcao(_)),
-    assert(direcao(D2)).
+    assert(direcao(D1)).
 
 mudadirdir :- %diminui o angulo da direcao
     direcao(D0),
-    D1 is D0 - 90,
-    D2 is D1 mod 360,
-    retractall(posicao(_)),
-    assert(direcao(D2)).
+    D1 is (D0-90) mod 360,
+    retractall(direcao(_)),
+    assert(direcao(D1)).
 
 mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
     direcao(Angulo),
@@ -238,17 +236,20 @@ casafrente :-
 casasvisitadas :-
    visitadas(V),
    posicao(At),
-   append([At],V,Fui1),
-   list_to_set(Fui1,Fui),
+   delete(V,[At],B),
+   append(B,[At],Fui),
    retractall(visitadas(_)),
    assert(visitadas(Fui)).
 
 %casasperigosas :- %funcao para calcular casas que oferecem risco
-%   adjacentes(A),
-%   seguras(S),
-%   retractall(perigosas(_)),
-%   subtracCt(A,S,Cp1),
-
+%  perigosas(P),
+%  adjacentes(A),
+%  seguras(S),
+%  posicao(C),
+%  retractall(perigosas(_)),
+%  subtract(A,S,P1),
+%  append(C,P1,P2),
+%  assert(perigosas(P4)).
 
 casasegura([no,no,_,_,_]) :- 
     seguras(K),
@@ -278,13 +279,14 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro (ok)
 
 %inteligencia do agente
 coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo  
-    mudacasa.
+    mudacasa,
+    casasvisitadas.
 
-coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar 
+coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar (ok) 
     mudadiresq.
 
 %coragem([_,yes,no,no,no],A)
-%
+
 coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho (ok)
     retractall(ouro(_)),
     assert(ouro(1)).
@@ -305,9 +307,11 @@ coragem([yes,_,_,_,yes], goforward):- %vai pra frente sesentir fedor e wumpus es
     mudacasa.
 
 coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o vento ou sentir o brilho
-    mudacasa.
+    wumpus(morto),
+    mudacasa,
+    casasvisitadas.
 
-coragem([_,yes,_,no,_], turnleft) :-
+coragem([_,yes,_,no,_], turnleft) :- %dar meia volta ao sentir o vento
     mudadiresq,
     mudadiresq.
 
