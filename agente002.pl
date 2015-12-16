@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -49,6 +49,7 @@ init_agent:-
     retractall(casaanterior(_)),
     retractall(seguras(_)),
     retractall(visitadas(_)),
+    %retracatll(perigosas(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -61,6 +62,7 @@ init_agent:-
     assert(casaanterior([0,1])),%início de casas anteriores
     assert(seguras([1,1])),
     assert(visitadas([1,1])).
+    %assert(perigosas([])).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -95,6 +97,9 @@ run_agent(Percepcao, Acao) :-
     visitadas(Cv),
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
+    %perigosas(Cp),
+    %write('Lista de casas perigosas: '), %informa as casas perigosas
+    %    writeln(Cp),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
     writeln(O),
@@ -238,6 +243,13 @@ casasvisitadas :-
    retractall(visitadas(_)),
    assert(visitadas(Fui)).
 
+%casasperigosas :- %funcao para calcular casas que oferecem risco
+%   adjacentes(A),
+%   seguras(S),
+%   retractall(perigosas(_)),
+%   subtracCt(A,S,Cp1),
+
+
 casasegura([no,no,_,_,_]) :- 
     seguras(K),
     posicao([S,L]),
@@ -265,11 +277,8 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro (ok)
     assert(flecha(X1)).
 
 %inteligencia do agente
-coragem([_,_,no,no,_], goforward) :- 
-    mudadiresq,
+coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo  
     mudacasa.
-
-coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo  
 
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar 
     mudadiresq.
@@ -292,9 +301,11 @@ coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpu
     retractall(flecha(_)),
     assert(flecha(0)).
 
-coragem([yes,_,_,_,yes], goforward). %vai pra frente sesentir fedor e wumpus estiver morto
+coragem([yes,_,_,_,yes], goforward):- %vai pra frente sesentir fedor e wumpus estiver morto
+    mudacasa.
 
-coragem([_,no,no,no,_], goforward). %vai para frente se nao trombar, sentir o vento ou sentir o brilho
+coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o vento ou sentir o brilho
+    mudacasa.
 
 coragem([_,yes,_,no,_], turnleft) :-
     mudadiresq,
