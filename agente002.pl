@@ -101,13 +101,13 @@ run_agent(Percepcao, Acao) :-
     %    write('Lista de casas perigosas: '), %informa as casas perigosas
     %    writeln(Cp),
     ouro(O),
-    write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
+    write('Numero de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
     wumpus(V),
-    write('Saude do Wumpus: '), %informa a condicao do wumpus (ok)
+    write('Saude do Wumpus: '), %informa a condicao do wumpus 
     writeln(V),
     flecha(F),
-    write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro (ok)
+    write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro 
     writeln(F).
 %casas seguras
 %casas perigosas (adicionar estas funcoes).
@@ -142,7 +142,7 @@ mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
     X2 is X+1,
     assert(frente([X2,Y])).
 
-mudacasa :-
+mudacasa :- %agente esta virado para cima
     direcao(Angulo),
     Angulo == 90,
     posicao([X,Y]),
@@ -156,7 +156,7 @@ mudacasa :-
     Y2 is Y+2,
     assert(frente([X,Y2])).
 
-mudacasa :-
+mudacasa :- %agente virado para a esquerda
     direcao(Angulo),
     Angulo == 180,
     posicao([X,Y]),
@@ -170,7 +170,7 @@ mudacasa :-
     X2 is X-2,
     assert(frente([X2,Y])).
 
-mudacasa :-
+mudacasa :- %agente virado para baixo
     direcao(Angulo),
     Angulo == 270,
     posicao([X,Y]),
@@ -184,12 +184,12 @@ mudacasa :-
     Y2 is Y-2,
     assert(frente([X,Y2])).
 
-mudacasa :-
+mudacasa :- %antes do agente andar, ele salva a casa atual como a futura casa anterior
     posicao([X,Y]),
     retractall(casaanterior(_)),
     assert(casaanterior([X,Y])).
 
-antes :-
+antes :- %funcao que calcula a casa anterior
     posicao([X,Y]),
     casaanterior([A,B]),
     X==A,
@@ -233,7 +233,7 @@ casafrente :-
     Y1 is Y-1,
     assert(frente([X1,Y1])).
 
-casasvisitadas :-
+casasvisitadas :- %funcao que salva casas visitadas
    visitadas(V),
    posicao(At),
    delete(V,[At],B),
@@ -271,7 +271,27 @@ casasegura([no,no,_,_,_]) :-
     retractall(seguras(_)),
     assert(seguras(F)).
 
-decflecha:- %funcao para diminuir numero de flechas apos o tiro (ok)
+casasegura([no,no,_,_,_]) :-
+    seguras(K),
+    posicao([S,L],
+    direcao==180,
+    Z is S - 1,
+    S>1,
+    append(K,[[S,L]],F),
+    retractall(seguras(_)),
+    assert(seguras(F)).
+
+casasegura([no,no,_,_,_]) :-
+    seguras(K),
+    posicao([S,L]),
+    direcao==270,
+    Z is L-1,
+    L>1,
+    append(K,[[S,Z]],F),
+    retractall(seguras(_)),
+    assert(seguras(F)).
+
+decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
@@ -282,20 +302,20 @@ coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo
     mudacasa,
     casasvisitadas.
 
-coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar (ok) 
+coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
     mudadiresq.
 
 %coragem([_,yes,no,no,no],A)
 
-coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho (ok)
+coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
     retractall(ouro(_)),
     assert(ouro(1)).
 
-coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto (ok)
+coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
 
-coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha (ok)
+coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha
     wumpus(vivo),
     flecha(X),
     X\==0,
@@ -315,10 +335,10 @@ coragem([_,yes,_,no,_], turnleft) :- %dar meia volta ao sentir o vento
     mudadiresq,
     mudadiresq.
 
-coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro. (ok)
+coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro
     posicao([1,1]),
     ouro(1).
-coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto. (ok)
+coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto
     posicao([1,1]),
     wumpus(morto).
 
