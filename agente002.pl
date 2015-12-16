@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,casasperigosas/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,casasperigosas/1,ventando/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -50,6 +50,7 @@ init_agent:-
     retractall(seguras(_)),
     retractall(visitadas(_)),
     retractall(perigosas(_)),
+    retractall(ventando(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -60,9 +61,10 @@ init_agent:-
     assert(casafrente([])), %agente inicia virado para direita e na casa [1,1]
     assert(frente([])), %informa a casa a frente do agente, dependendo de sua orientacao
     assert(casaanterior([])),%início de casas anteriores
-    assert(seguras([])), %informa as casas que sao seguras
+    assert(seguras([[1,1]])), %informa as casas que sao seguras
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
-    assert(perigosas([])). %informa as casas que oferecem risco ao agente
+    assert(perigosas([])), %informa as casas que oferecem risco ao agente
+    assert(ventando([turnleft,turnleft,goforward,turnright,goforward,turnright])).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -240,8 +242,9 @@ casasvisitadas :- %funcao que salva casas visitadas
    posicao(At),
    delete(V,[At],B),
    append(B,[At],Fui),
+   list_to_set(Fui,Reduz),
    retractall(visitadas(_)),
-   assert(visitadas(Fui)).
+   assert(visitadas(Reduz)).
 
 casasperigosas :- %funcao para calcular casas que oferecem risco
    perigosas(P),
@@ -254,46 +257,21 @@ casasperigosas :- %funcao para calcular casas que oferecem risco
    append(C,P1,P2),
    assert(perigosas(P2)).
 
-casasegura([no,no,_,_,_]) :- 
-    seguras(K),
-    posicao([S,L]),
-    direcao==0,
-    Z is S + 1,
-    S<4,
-    append(K,[[Z,L]], F),
+casasegura([no,no,_,_,_]) :- %funcao para calcular as casas seguras
+    posicao(MinhcaCasa),
+    seguras(S),
+    adjacentes(MinhaCasa, A),
+    append([MinhaCasa],A,B,
+    append(B,S,L),
     retractall(seguras(_)),
-    assert(seguras(F)).
+    assert(seguras(L)).
 
-casasegura([no,no,_,_,_]) :-
-    seguras(K),
-    posicao([S,L]),
-    direcao==90,
-    Z is L + 1,
-    L<4,
-    append(K,[[S,Z]],F),
+casasegura([_,_,_,no,_]) :-
+    posicao(MinhaCasa),
+    seguras(S),
+    append([MinhaCasa],S,B),
     retractall(seguras(_)),
-    assert(seguras(F)).
-
-casasegura([no,no,_,_,_]) :-
-    seguras(K),
-    posicao([S,L],
-    direcao==180,
-    Z is S - 1,
-    S>1,
-    append(K,[[S,L]],F),
-    retractall(seguras(_)),
-    assert(seguras(F)).
-
-casasegura([no,no,_,_,_]) :-
-    seguras(K),
-    posicao([S,L]),
-    direcao==270,
-    Z is L-1,
-    L>1,
-    append(K,[[S,Z]],F),
-    retractall(seguras(_)),
-    assert(seguras(F)).
-
+    assert(seguras(B)).
 
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
