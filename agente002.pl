@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -46,15 +46,17 @@ init_agent:-
     retractall(wumpus(_)),
     retractall(casafrente(_)),
     retractall(frente(_)),
+    retractall(casaanterior(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
-    assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
-    assert(wumpus(vivo)), %wumpus inicia vivo
-    assert(casafrente([2,1])), %agente inicia virado par direita e na casa [1,1]
-    assert(frente([2,1])).
+assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
+assert(wumpus(vivo)), %wumpus inicia vivo
+assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
+assert(frente([2,1])),
+assert(casaanterior([0,1])).%início de casas anteriores
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -123,7 +125,7 @@ mudacasa :- %funcoes para calcular a posicao do agente a partir de sua direcao
     retractall(frente(_)),
     X2 is X+1,
     assert(frente([X2,Y])).
-    
+
 mudacasa :-
     direcao(Angulo),
     Angulo == 90,
@@ -167,6 +169,20 @@ mudacasa :-
     Y1 is Y,
     retractall(posicao([_|_])),
     assert(posicao([X,Y1])).
+
+agora:- % funcao onde o agente vai saber onde está. (direcao)
+    direcao(Direcao),
+    Direcao == 0,
+    casaatual([X,Y]),
+    X < 4,
+    retractall(casaanterior(_)),
+    assert(casaanterior([X,Y])),
+    retractall(casaatual(_)),
+    retractall(frente(_)),
+    X1 is X+1,
+    X2 is X+2,
+    assert(casaatual([X1,Y])),
+    assert(frente([X2,Y])).
 
 casafrente :- %funcao para calcular casa a frente, dependendo da direcao do agente
     direcao(Angulo),
@@ -236,7 +252,7 @@ coragem([_,_,no,no,_], goforward) :-
     mudacasa([X]).
 
 coragem([no,no,no,no,no], goforward). %vai pra frente se não sentir perigo  
-    
+
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar 
     mudadiresq.
 
