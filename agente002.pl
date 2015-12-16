@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -48,6 +48,7 @@ init_agent:-
     retractall(frente(_)),
     retractall(casaanterior(_)),
     retractall(seguras(_)),
+    retractall(visitadas(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -58,7 +59,8 @@ init_agent:-
     assert(casafrente([2,1])), %agente inicia virado para direita e na casa [1,1]
     assert(frente([2,1])),
     assert(casaanterior([0,1])),%início de casas anteriores
-    assert(seguras([1,1])).
+    assert(seguras([1,1])),
+    assert(visitadas([1,1])).
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -90,6 +92,9 @@ run_agent(Percepcao, Acao) :-
     seguras(Cs),
     write('Lista de casas seguras: '), %informa as casas que nao orferecem risco ao agente
     writeln(Cs),
+    visitadas(Cv),
+    write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
+    writeln(Cv),
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente (ok)
     writeln(O),
@@ -99,7 +104,6 @@ run_agent(Percepcao, Acao) :-
     flecha(F),
     write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro (ok)
     writeln(F).
-%casas visitadas
 %casas seguras
 %casas perigosas (adicionar estas funcoes).
 
@@ -226,10 +230,18 @@ casafrente :-
     Y1 is Y-1,
     assert(frente([X1,Y1])).
 
+casasvisitadas :-
+   visitadas(V),
+   posicao(At),
+   append([At],V,Fui1),
+   list_to_set(Fui1,Fui),
+   retractall(visitadas(_)),
+   assert(visitadas(Fui)).
+
 casasegura([no,no,_,_,_]) :- 
     seguras(K),
     posicao([S,L]),
-    angulo(0),
+    direcao==0,
     Z is S + 1,
     S<4,
     append(K,[[Z,L]], F),
@@ -239,7 +251,7 @@ casasegura([no,no,_,_,_]) :-
 casasegura([no,no,_,_,_]) :-
     seguras(K),
     posicao([S,L]),
-    angulo(90),
+    direcao==90,
     Z is L + 1,
     L<4,
     append(K,[[S,Z]],F),
