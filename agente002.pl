@@ -281,6 +281,14 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
 
 %remover acoes de goforward, e deixar o agente andar pelas gasas seguras (deixar so pegar o ouro e sair).
 %inteligencia do agente
+coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha
+    wumpus(vivo),
+    flecha(X),
+    X\==0,
+    decflecha,
+    retractall(flecha(_)),
+    assert(flecha(0)).
+
 coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo  
     mudacasa,
     casasvisitadas.
@@ -301,16 +309,6 @@ coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
 
-coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha
-    wumpus(vivo),
-    flecha(X),
-    X\==0,
-    decflecha,
-    retractall(flecha(_)),
-    assert(flecha(0)).
-
-coragem([yes,_,_,_,yes], goforward):- %vai pra frente sesentir fedor e wumpus estiver morto
-    mudacasa.
 
 coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o vento ou sentir o brilho
     wumpus(morto),
