@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,casasperigosas/1,ventando/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,ventando/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -250,18 +250,18 @@ casasperigosas :- %funcao para calcular casas que oferecem risco
    perigosas(P),
    posicao(MinhaCasa),
    adjacentes(MinhaCasa, A),
-   seguras(S),
-   posicao(C),
+   visitadas(V),
+   subtract(V, A, P1),
+   append(P1, P, NovaLista1),
+   list_to_set(NovaLista1, NovaLista),
    retractall(perigosas(_)),
-   subtract(S,A,P1),
-   append(C,P1,P2),
-   assert(perigosas(P2)).
+   assert(perigosas(NovaLista)).
 
 casasegura([no,no,_,_,_]) :- %funcao para calcular as casas seguras
-    posicao(MinhcaCasa),
+    posicao(MinhaCasa),
     seguras(S),
     adjacentes(MinhaCasa, A),
-    append([MinhaCasa],A,B,
+    append([MinhaCasa],A,B),
     append(B,S,L),
     retractall(seguras(_)),
     assert(seguras(L)).
@@ -288,7 +288,10 @@ coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
     mudadiresq.
 
-%coragem([_,yes,no,no,no],A)
+%coragem([_,yes,no,no,no],A):-
+%    ventando(A|R),
+%    retractall(ventando(_)),
+%    assert(ventando(R)).
 
 coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
     retractall(ouro(_)),
@@ -316,8 +319,7 @@ coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o v
 
 coragem([_,yes,_,_,_], turnleft) :- %dar meia volta ao sentir o vento
     mudadiresq,
-    mudadiresq,
-    casasperigosas.
+    mudadiresq.
 
 coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro
     posicao([1,1]),
