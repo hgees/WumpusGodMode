@@ -316,7 +316,6 @@ coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o v
     casasvisitadas.
 
 coragem([_,yes,_,_,_], turnleft) :- %dar meia volta ao sentir o vento
-    mudadiresq,
     mudadiresq.
 
 coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro
