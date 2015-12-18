@@ -292,7 +292,7 @@ coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
     retractall(ouro(_)),
     assert(ouro(1)).
 
-coragem([_,_,_,_,yes], _]):- %nao atirar quando ouvir o grito; wumous morto
+coragem([_,_,_,_,yes], _):- %nao atirar quando ouvir o grito; wumous morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
 
