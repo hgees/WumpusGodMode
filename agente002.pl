@@ -277,6 +277,31 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
 
 %remover acoes de goforward, e deixar o agente andar pelas gasas seguras (deixar so pegar o ouro e sair).
 %inteligencia do agente
+coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
+    wumpus(vivo),
+    flecha(X),
+    X\==0,
+    decflecha,
+    retractall(flecha(_)),
+    assert(flecha(0)).
+
+coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
+    mudadirsq.
+
+coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
+    retractall(ouro(_)),
+    assert(ouro(1)).
+
+coragem([_,_,_,_,yes], _]):- %nao atirar quando ouvir o grito; wumous morto
+    retractall(wumpus(_)),
+    assert(wumpus(morto)).
+
+coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
+    posicao([1,1]),
+    ouro(1).
+coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
+    posicao([1,1]),
+    wumpus(morto).
 
 coragem(_, Acao):-
     posicao([X,Y]),
@@ -400,36 +425,6 @@ pense([X,Y],270,[X2,Y], turnright):-
 pense([X,Y],270,[X,Y2], turnleft):-
     Y<Y2,
     mudadiresq.
-
-
-coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha
-    wumpus(vivo),
-    flecha(X),
-    X\==0,
-    decflecha,
-    retractall(flecha(_)),
-    assert(flecha(0)).
-
-coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
-    mudadiresq.
-
-coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
-    retractall(ouro(_)),
-    assert(ouro(1)).
-
-coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
-    retractall(wumpus(_)),
-    assert(wumpus(morto)).
-
-coragem([_,yes,_,_,_], turnleft) :- %dar meia volta ao sentir o vento
-    mudadiresq.
-
-coragem([_,_,_,_,_], climb) :- %agente deve sair da caverna se estiver na casa [1,1] e estiver com o ouro
-    posicao([1,1]),
-    ouro(1).
-coragem([_,_,_,_,_], climb) :- %agente sai da caverna se estiver na casa [1,1 e se wumpus estiver morto
-    posicao([1,1]),
-    wumpus(morto).
 
 %funcoes para calcular as casas adjacentes
 cima([H, T], L1):-
