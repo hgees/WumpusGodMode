@@ -32,14 +32,12 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
 init_agent:-
     retractall(posicao(_)),
-    retractall(caverna(_)),
-    retractall(vida(_)),
     retractall(ouro(_)),
     retractall(flecha(_)),
     retractall(direcao(_)),
@@ -50,8 +48,6 @@ init_agent:-
     retractall(visitadas(_)),
     retractall(perigosas(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
-    assert(caverna(sim)),  %agente esta na caverna
-    assert(vida(ativo)), %agente esta vivo
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
@@ -184,11 +180,6 @@ mudacasa :- %agente virado para baixo
     Y2 is Y-2,
     assert(frente([X,Y2])).
 
-mudacasa :- %antes do agente andar, ele salva a casa atual como a futura casa anterior
-    posicao([X,Y]),
-    retractall(casaanterior(_)),
-    assert(casaanterior([X,Y])).
-
 antes :- %funcao que calcula a casa anterior
     posicao([X,Y]),
     casaanterior([A,B]),
@@ -242,41 +233,61 @@ casasvisitadas :- %funcao que salva casas visitadas
    retractall(visitadas(_)),
    assert(visitadas(Reduz)).
 
-casasperigosas :- %funcao para calcular casas que oferecem risco
+%funcao para calcular casas que oferecem risco ao agente
+casasperigosas([yes,_,_,_,_]):- %agente sente o fedor
    perigosas(P),
    posicao(MinhaCasa),
    adjacentes(MinhaCasa, A),
    visitadas(V),
    subtract(V, A, P1),
    append(P1, P, NL1),
-   list_to_set(NL1, NL),
+   list_to_set(NL1, N),
    retractall(perigosas(_)),
-   assert(perigosas(NL)).
+   assert(perigosas(N)).
 
-casasegura([no,no,_,_,_]) :- %funcao para calcular as casas seguras
+casasperigosas([_,yes,_,_,_]:- %agente sente o vento
+    perigosas(P),
+    posicao(MinhaCasa),
+    adjacentes(MinhaCasa, A),
+    visitadas(V),
+    subtract(V, A, P1),
+    append(P1, P, NL1),
+    list_to_set(NL1, N),
+    retractall(perigosas(_)),
+    assert(perigosas(N)).
+
+%funcao para calcular as casas seguras
+casasegura([no,no,_,_,_]) :- %agente nao sente vento ou fedor
     posicao(MinhaCasa),
     seguras(S),
     adjacentes(MinhaCasa, A),
-    append([MinhaCasa],A,B),
-    append(B,S,L),
+    append([MinhaCasa],A,B), 
+    append(B,S,L), %casa atual + adjacentes que nao oferecem risco + casas que ja eram consideradas seguras
     retractall(seguras(_)),
     assert(seguras(L)).
 
-casasegura([_,_,_,no,_]) :-
+casasegura([_,_,_,no,_]) :- %se sentisse a trombada estaria salvando a mesma casa duas vezes como segura
     posicao(MinhaCasa),
     seguras(S),
-    append([MinhaCasa],S,B),
+    append([MinhaCasa],S,B), %se as adjacentes oferem risco, as seguras serao somente a atual+as que ja eram consideras seguras
     retractall(seguras(_)),
     assert(seguras(B)).
-
+    
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
     X1 is X0-1,
     retractall(flecha(_)),
     assert(flecha(X1)).
 
+%definir e criar funcao alvo
+
 %remover acoes de goforward, e deixar o agente andar pelas gasas seguras (deixar so pegar o ouro e sair).
 %inteligencia do agente
+
+coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
+    retractall(ouro(_)),
+    assert(ouro(1)).
+
 coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
     wumpus(vivo),
     flecha(X),
@@ -285,16 +296,12 @@ coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpu
     retractall(flecha(_)),
     assert(flecha(0)).
 
-coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
-    mudadirsq.
-
-coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
-    retractall(ouro(_)),
-    assert(ouro(1)).
-
-coragem([_,_,_,_,yes], _):- %nao atirar quando ouvir o grito; wumous morto
+coragem([_,_,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
+
+coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
+    mudadirsq.
 
 coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
     posicao([1,1]),
@@ -341,12 +348,12 @@ coragem(_, Acao):-
 
 acao(Angulo,Angulo2,Acao):-
     Angulo\==Angulo2,
-    Acao=turnleft,
+    Acao is turnleft,
     mudadiresq.
 
 acao(Angulo,Angulo2,Acao):-
     Angulo==Angulo2,
-    Acao=goforward,
+    Acao is goforward,
     mudacasa.
 
 %calculando a acao, com base no issue criado em 15-12-2015 
