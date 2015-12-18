@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,mudacasa/1,ouro/1,casafrente/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,casasegura/1,ventando/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,angulo/1,vida/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -44,13 +44,11 @@ init_agent:-
     retractall(flecha(_)),
     retractall(direcao(_)),
     retractall(wumpus(_)),
-    retractall(casafrente(_)),
     retractall(frente(_)),
     retractall(casaanterior(_)),
     retractall(seguras(_)),
     retractall(visitadas(_)),
     retractall(perigosas(_)),
-    retractall(ventando(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(caverna(sim)),  %agente esta na caverna
     assert(vida(ativo)), %agente esta vivo
@@ -58,13 +56,11 @@ init_agent:-
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
     assert(wumpus(vivo)), %wumpus inicia vivo
-    assert(casafrente([])), %agente inicia virado para direita e na casa [1,1]
     assert(frente([])), %informa a casa a frente do agente, dependendo de sua orientacao
     assert(casaanterior([])),%início de casas anteriores
     assert(seguras([[1,1]])), %informa as casas que sao seguras
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
-    assert(perigosas([])), %informa as casas que oferecem risco ao agente
-    assert(ventando([turnleft,turnleft,goforward,turnright,goforward,turnright])).
+    assert(perigosas([])). %informa as casas que oferecem risco ao agente
 
 
 % esta funcao permanece a mesma. Nao altere.
@@ -113,12 +109,12 @@ run_agent(Percepcao, Acao) :-
     flecha(F),
     write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro 
     writeln(F).
-%casas seguras
-%casas perigosas (adicionar estas funcoes).
 
 %definindo direcao do agente.
-direcao(0). %agente esta virado para direita.
-% 0-> direita, 90-> cima, 180-> esquerda, 270-> baixo.
+% 0-> direita, 
+% 90-> cima,
+% 180-> esquerda,
+% 270-> baixo.
 
 mudadiresq :- %mudanca da direcao para a esquerda (angulo maior em relacao ao inicial)
     direcao(D0),
@@ -252,10 +248,10 @@ casasperigosas :- %funcao para calcular casas que oferecem risco
    adjacentes(MinhaCasa, A),
    visitadas(V),
    subtract(V, A, P1),
-   append(P1, P, NovaLista1),
-   list_to_set(NovaLista1, NovaLista),
+   append(P1, P, NL1),
+   list_to_set(NL1, NL),
    retractall(perigosas(_)),
-   assert(perigosas(NovaLista)).
+   assert(perigosas(NL)).
 
 casasegura([no,no,_,_,_]) :- %funcao para calcular as casas seguras
     posicao(MinhaCasa),
@@ -281,6 +277,131 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
 
 %remover acoes de goforward, e deixar o agente andar pelas gasas seguras (deixar so pegar o ouro e sair).
 %inteligencia do agente
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(S),
+    direcao(Angulo),
+    Angulo==0,
+    Z is X+1,
+    member([Z,Y],S),
+    acao(Angulo,0,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(S),
+    direcao(Angulo),
+    Angulo==90,
+    Z is Y+1,
+    member([X,Z],S),
+    acao(Angulo,90,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(S),
+    direcao(Angulo),
+    Angulo==180,
+    Z is X-1,
+    member([Z,Y],S),
+    acao(Angulo,180,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(S),
+    direcao(Angulo),
+    Angulo==270,
+    Z is Y-1,
+    member([X,Z],S),
+    acao(Angulo,270,Acao).
+
+acao(Angulo,Angulo2,Acao):-
+    Angulo\==Angulo2,
+    Acao=turnleft,
+    mudadiresq.
+
+acao(Angulo,Angulo2,Acao):-
+    Angulo==Angulo2,
+    Acao=goforward,
+    mudacasa.
+
+%calculando a acao, com base no issue criado em 15-12-2015 
+
+%acoes para o agente andar para frente, com base em sua direcao.
+pense([X,Y],0,[X2,Y], goforward):- %angulo=0
+    X<X2,
+    posicao(P),
+    retractall(casaanterior(_)),
+    assert(casaanterior(P)),
+    mudacasa.
+
+pense([X,Y],90,[X,Y2], goforward):- %angulo=90
+    Y<Y2,
+    posicao(P),
+    retractall(casaanterior(_)),
+    assert(casaanterior(P)),
+    mudacasa.
+
+pense([X,Y],180,[X2,Y], goforward):- %angulo=180
+    X>X2,
+    posicao(P),
+    retractall(casaanterior(_)),
+    asser(casaanterior(P)),
+    mudacasa.
+
+pense([X,Y],270,[X,Y2], goforward):- %angulo=270
+    Y>Y2,
+    posicao(P),
+    retractall(casaanterior(_)),
+    assert(casaanterior(P)),
+    mudacasa.
+
+%acao que o agente deve retornar, evitando que entre em um ciclo vicioso
+
+%para angulo=0 (virado para direita)
+pense([X,Y],0,[X2,Y], turnleft):-
+    X>X2,
+    mudadiresq.
+pense([X,Y],0,[X,Y2], turnright):-
+    Y>Y2,
+    mudadirdir.
+pense([X,Y],0,[X,Y2], turnleft):-
+    Y<Y2,
+    mudadiresq.
+
+%para angulo=90 (virado para cima)
+pense([X,Y],90,[X2,Y], turnleft):-
+    X>X2,
+    mudadiresq.
+pense([X,Y],90,[X2,Y], turnright):-
+    X<X2,
+    mudadirdir.
+pense([X,Y],90,[X,Y2], turnleft):-
+    Y>Y2,
+    mudadiresq.
+
+%para angulo=180 (virado para a esquerda)
+pense([X,Y],180,[X2,Y], turnleft):-
+    X<X2,
+    mudadiresq.
+pense([X,Y],180,[X,Y2], turnright):-
+    Y<Y2,
+    mudadirdir.
+pense([X,Y],180,[X,Y2], turnleft):-
+    Y>Y2,
+    mudadiresq.
+
+%para angulo=270 (virado para baixo)
+pense([X,Y],270,[X2,Y], turnleft):-
+    X<X2,
+    mudadiresq.
+pense([X,Y],270,[X2,Y], turnright):-
+    X>X2,
+    mudadirdir.
+pense([X,Y],270,[X,Y2], turnleft):-
+    Y<Y2,
+    mudadiresq.
+
+
 coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpus estiver vivo e tiver uma flecha
     wumpus(vivo),
     flecha(X),
@@ -289,17 +410,8 @@ coragem([yes,no,no,no,_], shoot) :-  %atira em linha reta se sentir fedor, wumpu
     retractall(flecha(_)),
     assert(flecha(0)).
 
-coragem([no,no,no,no,no], goforward):- %vai pra frente se não sentir perigo  
-    mudacasa,
-    casasvisitadas.
-
 coragem([_,_,no,yes,no], turnleft) :- %vira para a esquerda se trombar
     mudadiresq.
-
-%coragem([_,yes,no,no,no],A):-
-%    ventando(A|R),
-%    retractall(ventando(_)),
-%    assert(ventando(R)).
 
 coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
     retractall(ouro(_)),
@@ -308,12 +420,6 @@ coragem([_,_,yes,_,_], grab) :- %pega o ouro se sentir o brilho
 coragem([_,_,_,_,yes],_) :- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)).
-
-
-coragem([_,no,no,no,_], goforward):- %vai para frente se nao trombar, sentir o vento ou sentir o brilho
-    wumpus(morto),
-    mudacasa,
-    casasvisitadas.
 
 coragem([_,yes,_,_,_], turnleft) :- %dar meia volta ao sentir o vento
     mudadiresq.
