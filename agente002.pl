@@ -32,7 +32,7 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1]).
+:-dynamic([flecha/1,direcao/1,seguras/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,turista/1,alvo/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -47,6 +47,8 @@ init_agent:-
     retractall(seguras(_)),
     retractall(visitadas(_)),
     retractall(perigosas(_)),
+    retractall(turista(_)),
+    retractall(alvo(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
@@ -56,7 +58,9 @@ init_agent:-
     assert(casaanterior([])),%início de casas anteriores
     assert(seguras([[1,1]])), %informa as casas que sao seguras
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
-    assert(perigosas([])). %informa as casas que oferecem risco ao agente
+    assert(perigosas([])), %informa as casas que oferecem risco ao agente
+    assert(turista([])), %casas seguras que o agente ainda nao visitou.
+    assert(alvo([])).
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -71,7 +75,6 @@ run_agent(Percepcao, Acao) :-
     posicao(P),
     write('Posição atual: '), %informa a casa atual do agente
     writeln(P),
-    coragem(Percepcao, Acao),
     direcao(Direcao),
     write('Direcao: '), %informa a direcao do agente
     writeln(Direcao),
@@ -95,15 +98,24 @@ run_agent(Percepcao, Acao) :-
     write('Lista de casas perigosas: '), %informa as casas perigosas
     writeln(perigosas),
     casasperigosas,
+    naovisitou(Posicao, L, Percepcao),
+    listavisita(Posicao, L, Percepcao),
+    turista(NV),
+    write('Casas seguras que o agente nao visitou: '),
+    writeln(NV),
+    alvo(A),
+    write('O alvo:'),
+    writeln(A),
     ouro(O),
-    write('Numero de ouro: '), %informa o numero de ouro do agente 
+    write('Quantidade de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
     wumpus(V),
-    write('Saude do Wumpus: '), %informa a condicao do wumpus 
+    write('Condicao do Wumpus: '), %informa a condicao do wumpus 
     writeln(V),
     flecha(F),
     write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro 
-    writeln(F).
+    writeln(F),
+    coragem(Percepcao, Acao).
 
 %definindo direcao do agente.
 % 0-> direita, 
@@ -115,7 +127,7 @@ run_agent(Percepcao, Acao) :-
 coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
     retractall(ouro(_)),
     assert(ouro(1)),
-    write('MAOE! Agora eu tenho barras de ouro pra comprar Jequiti!!!'),nl.
+    write('MAOE! Agora eu tenho barras de ouro!!!'),nl.
 
 coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
     wumpus(vivo),
@@ -143,52 +155,58 @@ coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e 
 %agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
 coragem(_, Acao):-
     posicao([X,Y]),
-    seguras(S),
+    turista(T),
+    direcao(D),
+    D==0,
+    Z is X+1,
+    member([Z,Y],T),
+    acao(D,0,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    turista(T),
+    direcao(D),
+    D==90,
+    Z is Y+1,
+    member([X,Z],T),
+    acao(D,90,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    turista(T),
+    direcao(D),
+    D==180,
+    Z is X-1,
+    member([Z,Y],T),
+    acao(D,180,Acao).
+
+coragem(_, Acao):-
+    posicao([X,Y]),
+    turista(T),
+    direcao(D),
+    D==270,
+    Z is Y-1,
+    member([X,Z],T),
+    acao(D,270,Acao).
+
+coragem(_, goforward):-
+    posicao([X,Y]),
     direcao(Angulo),
+    seguras(S),
     Angulo==0,
     Z is X+1,
     member([Z,Y],S),
-    acao(Angulo,0,Acao).
+    mudacasa.
 
-coragem(_, Acao):-
-    posicao([X,Y]),
-    seguras(S),
-    direcao(Angulo),
-    Angulo==90,
-    Z is Y+1,
-    member([X,Z],S),
-    acao(Angulo,90,Acao).
+acao(D,Angulo2,turnleft):-
+    D\==Angulo2,
+    mudadadiresq.
 
-coragem(_, Acao):-
-    posicao([X,Y]),
-    seguras(S),
-    direcao(Angulo),
-    Angulo==180,
-    Z is X-1,
-    member([Z,Y],S),
-    acao(Angulo,180,Acao).
-
-coragem(_, Acao):-
-    posicao([X,Y]),
-    seguras(S),
-    direcao(Angulo),
-    Angulo==270,
-    Z is Y-1,
-    member([X,Z],S),
-    acao(Angulo,270,Acao).
-
-acao(Angulo,Angulo2,Acao):-
-    Angulo\==Angulo2,
-    Acao is turnleft,
-    mudadiresq.
-
-acao(Angulo,Angulo2,Acao):-
-    Angulo==Angulo2,
-    Acao is goforward,
+acao(D,Angulo2,goforward):-
+    D==Angulo2,
     mudacasa.
 
 %calculando a acao, com base no issue criado em 15-12-2015 
-
 %acoes para o agente andar para frente, com base em sua direcao.
 %   (posicao,angulo,alvo,acao)
 pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
@@ -231,16 +249,17 @@ pense([X,Y], 90, [X2,Y], turnright):-
     X<X2,
     mudadirdir.
 pense([X,Y], 90, [X,Y2], turnleft):-
-    Y>Y2,
-    mudadiresq.
+   Y>Y2,
+   mudadiresq.
 
 %para angulo=180 (virado para a esquerda)
 pense([X,Y], 180, [X2,Y], turnleft):-
     X<X2,
-    mudadiresq.
+   mudadiresq.
 pense([X,Y], 180, [X,Y2], turnright):-
     Y<Y2,
     mudadirdir.
+    
 pense([X,Y], 180, [X,Y2], turnleft):-
     Y>Y2,
     mudadiresq.
@@ -255,6 +274,8 @@ pense([X,Y], 270, [X2,Y], turnright):-
 pense([X,Y], 270, [X,Y2], turnleft):-
     Y<Y2,
     mudadiresq.
+
+
 
 %funcoes de apoio
 mudadiresq :- %mudanca da direcao para a esquerda (angulo maior em relacao ao inicial)
@@ -398,24 +419,24 @@ casasperigosas(posicao, L, [_,yes,_,_,_]):- %agente sente o vento
    retractall(perigosas(_)),
    assert(perigosas(N)).
 
-%funcao para calcular as casas seguras que o agente ainda nao esteve, possibilitando acoes como goforward
-%turista(posicao, L, [no,no,_,_,_]):- %agente nao sente vento ou fedor
-    %append([posicao],L,V), %posicao atual + adjacentes que nao oferecem risco
-    % list_to_set(V,V1),
-    %    listavisita(V1).
+%funcao para calcular as casas seguras que o agente ainda nao esteve
+naovisitou(posicao, L, [no,no,_,_,_]):- %agente nao sente vento ou fedor
+    append([posicao],L,V), %posicao atual + adjacentes que nao oferecem risco
+    list_to_set(V,V1),
+    listavisita(V1).
 
-%turista(posicao,_,[_,_,_,no,_]):-
-%    V1=[posicao],
-%    listavisita(V1).
+naovisitou(posicao, _, [_,_,_,no,_]):-
+    V1=[posicao], 
+    listavisita(V1).
 
-%listavisita(V1):-
-    %visitar(T),
-    %visitadas(V),
-    %append(T,V1,L1),
-    %list_to_set(L1,L),
-    %subtract(L,V,L2),
-    %retractall(visitar(_)),
-    %   assert(visitar(L2)).
+listavisita(V1):-
+    turista(T),
+    visitadas(V),
+    append(T,V1,L1),
+    list_to_set(L1,L),
+    subtract(L,V,L2),
+    retractall(visitar(_)),
+    assert(visitar(L2)).
 
 
 %funcao para calcular as casas seguras
@@ -441,7 +462,12 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
     retractall(flecha(_)),
     assert(flecha(X1)).
 
-%definir e criar funcao alvo
+target:-
+    visitadas(V),
+    seguras(S),
+    retractall(alvo(_)),
+    subtract(S,V, A),
+    assert(alvo(A)).
 
 %funcoes para calcular as casas adjacentes
 cima([H, T], L1):-
