@@ -66,7 +66,7 @@ restart_agent :-
 % Funcao recebe Percepcao, uma lista conforme descrito acima.
 % Deve retornar uma Acao, dentre as acoes validas descritas acima.
 run_agent(Percepcao, Acao) :-
-    write('Percebi: '), %diz o que o agente percebeu (sentiu) (ok)
+    write('Percebi: '), %diz o que o agente percebeu (sentiu) 
     writeln(Percepcao),
     posicao(P),
     write('Posição atual: '), %informa a casa atual do agente
@@ -86,14 +86,14 @@ run_agent(Percepcao, Acao) :-
     writeln(Ca),
     casasegura(P, L, Percepcao),
     write('Lista de casas seguras: '), %informa as casas que nao orferecem risco ao agente
-    %    writeln(Cs),
+    writeln(seguras),
     visitadas(Cv),
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
     casasvisitadas,
-    perigosas(Cp),
+    perigosas(P, L, Percepcao),
     write('Lista de casas perigosas: '), %informa as casas perigosas
-    writeln(Cp),
+    writeln(perigosas),
     casasperigosas,
     ouro(O),
     write('Numero de ouro: '), %informa o numero de ouro do agente 
@@ -114,7 +114,8 @@ run_agent(Percepcao, Acao) :-
 %inteligencia do agente002, com base em suas prioridades.
 coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
     retractall(ouro(_)),
-    assert(ouro(1)).
+    assert(ouro(1)),
+    write('MAOE! Agora eu tenho barras de ouro pra comprar Jequiti!!!'),nl.
 
 coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
     wumpus(vivo),
@@ -192,30 +193,22 @@ acao(Angulo,Angulo2,Acao):-
 %   (posicao,angulo,alvo,acao)
 pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
     X<X2,
-    posicao(P),
-    retractall(casaanterior(_)),
-    assert(casaanterior(P)),
+    antes,
     mudacasa.
 
 pense([X,Y], 90, [X,Y2], goforward):- %angulo=90
     Y<Y2,
-    posicao(P),
-    retractall(casaanterior(_)),
-    assert(casaanterior(P)),
+    antes,
     mudacasa.
 
 pense([X,Y], 180, [X2,Y], goforward):- %angulo=180
     X>X2,
-    posicao(P),
-    retractall(casaanterior(_)),
-    asser(casaanterior(P)),
+    antes,
     mudacasa.
 
 pense([X,Y], 270, [X,Y2], goforward):- %angulo=270
     Y>Y2,
-    posicao(P),
-    retractall(casaanterior(_)),
-    assert(casaanterior(P)),
+    antes,
     mudacasa.
 
 
@@ -386,23 +379,20 @@ casasvisitadas :- %funcao que salva casas visitadas
    assert(visitadas(Reduz)).
 
 %funcao para calcular casas que oferecem risco ao agente
-casasperigosas([yes,_,_,_,_]):- %agente sente o fedor
+%          (posicao, adj, percepcao)
+casasperigosas(posicao, L, [yes,_,_,_,_]):- %agente sente o fedor
    perigosas(P),
-   posicao(MinhaCasa),
-   adjacentes(MinhaCasa, A),
    visitadas(V),
-   subtract(V, A, P1),
+   subtract(V, L, P1),
    append(P1, P, NL1),
    list_to_set(NL1, N),
    retractall(perigosas(_)),
    assert(perigosas(N)).
 
-casasperigosas([_,yes,_,_,_]:- %agente sente o vento
+casasperigosas(posicao, L, [_,yes,_,_,_]):- %agente sente o vento
    perigosas(P),
-   posicao(MinhaCasa),
-   adjacentes(MinhaCasa, A),
    visitadas(V),
-   subtract(V, A, P1),
+   subtract(V, L, P1),
    append(P1, P, NL1),
    list_to_set(NL1, N),
    retractall(perigosas(_)),
