@@ -32,7 +32,19 @@
 % ?- start.
 
 :- load_files([wumpus3]).
-:-dynamic([flecha/1,direcao/1,seguras/1,wumpus/1,posicao/1,ouro/1,frente/1,casaanterior/1,visitadas/1,perigosas/1,turista/1,alvo/1]).
+:-dynamic([flecha/1,
+           direcao/1,
+           seguras/1,
+           wumpus/1,
+           posicao/1,
+           ouro/1,
+           frente/1,
+           casaanterior/1,
+           visitadas/1,
+           perigosas/1,
+           turista/1,
+           alvo/1,
+           giro/1]).
 
 wumpusworld(pit3, 4). %tipo, tamanho
 
@@ -49,6 +61,7 @@ init_agent:-
     retractall(perigosas(_)),
     retractall(turista(_)),
     retractall(alvo(_)),
+    retractall(giro(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
     assert(ouro(0)), %agente inicia sem o ouro
     assert(flecha(1)), %agente inicia com uma flecha.
@@ -60,7 +73,8 @@ init_agent:-
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
     assert(perigosas([])), %informa as casas que oferecem risco ao agente
     assert(turista([])), %casas seguras que o agente ainda nao visitou.
-    assert(alvo([])).
+    assert(alvo([])),
+    assert(giro(0)).
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -87,25 +101,16 @@ run_agent(Percepcao, Acao) :-
     casaanterior(Ca),
     write('A casa anterior era: '), %informa a ultima casa que o agente esteve
     writeln(Ca),
-    casasegura(P, L, Percepcao),
+    seguras(Cs),
     write('Lista de casas seguras: '), %informa as casas que nao orferecem risco ao agente
-    writeln(seguras),
+    writeln(Cs),
     visitadas(Cv),
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
     casasvisitadas,
-    perigosas(P, L, Percepcao),
+    perigosas(Cp),
     write('Lista de casas perigosas: '), %informa as casas perigosas
-    writeln(perigosas),
-    casasperigosas,
-    naovisitou(Posicao, L, Percepcao),
-    listavisita(Posicao, L, Percepcao),
-    turista(NV),
-    write('Casas seguras que o agente nao visitou: '),
-    writeln(NV),
-    alvo(A),
-    write('O alvo:'),
-    writeln(A),
+    writeln(Cp),
     ouro(O),
     write('Quantidade de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
@@ -122,6 +127,12 @@ run_agent(Percepcao, Acao) :-
 % 90-> cima,
 % 180-> esquerda,
 % 270-> baixo.
+
+roda:-
+    giro(G),
+    G1 is G+1,
+    retractall(giro(_)),
+    assert(giro(G1)).
 
 %inteligencia do agente002, com base em suas prioridades.
 coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
@@ -151,6 +162,28 @@ coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1
 coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
     posicao([1,1]),
     wumpus(morto).
+
+coragem(_, goforward):-
+    giro(G),
+    G==2,
+    retractall(giro(_)),
+    assert(giro(0)),
+    mudacasa.
+
+coragem([yes,no,no,no,no], turnleft):-
+    mudadiresq,
+    roda,
+    verperigosas.
+
+coragem([no,yes,no,no,no], turnleft):-
+    mudadiresq,
+    roda,
+    verperigosas.
+
+coragem([no,no,no,no,no], goforward):-
+    mudacasa,
+    versegura.
+
 
 %agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
 coragem(_, Acao):-
@@ -399,25 +432,107 @@ casasvisitadas :- %funcao que salva casas visitadas
    retractall(visitadas(_)),
    assert(visitadas(Reduz)).
 
-%funcao para calcular casas que oferecem risco ao agente
-%          (posicao, adj, percepcao)
-casasperigosas(posicao, L, [yes,_,_,_,_]):- %agente sente o fedor
-   perigosas(P),
-   visitadas(V),
-   subtract(V, L, P1),
-   append(P1, P, NL1),
-   list_to_set(NL1, N),
-   retractall(perigosas(_)),
-   assert(perigosas(N)).
+%funcao para calcular casas seguras
+versegura:-
+    casasegura0,
+    casasegura90,
+    casasegura180,
+    casasegura270.
 
-casasperigosas(posicao, L, [_,yes,_,_,_]):- %agente sente o vento
-   perigosas(P),
-   visitadas(V),
-   subtract(V, L, P1),
-   append(P1, P, NL1),
-   list_to_set(NL1, N),
-   retractall(perigosas(_)),
-   assert(perigosas(N)).
+casasegura0:-
+    seguras(S),
+    posicao([X,Y]),
+    X<4,
+    Z is X+1,
+    not(member([Z,Y],S)),
+    append(S,[[Z,Y]],S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)).
+casasegura0.
+
+casasegura90:-
+    seguras(S),
+    posicao([X,Y]),
+    Y<4,
+    Z is Y+1,
+    not(member([X,Z],S)),
+    append(S,[[Z,Y]],S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)).
+casasegura90.
+
+casasegura180:-
+    seguras(S),
+    posicao([X,Y]),
+    X>1,
+    Z is X-1,
+    not(member([Z,Y],S)),
+    append(S,[[Z,Y]],S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)).
+casasegura180.
+
+casasegura270:-
+    seguras(S),
+    posicao([X,Y]),
+    Y>1,
+    Z is Y-1,
+    not(member([X,Z],S)),
+    append(S,[[X,Z]],S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)).
+casasegura270.
+
+%funcao para calcular casas que oferecem risco ao agente
+verperigosas:-
+    casasperigosas0,
+    casasperigosas90,
+    casasperigosas180,
+    casasperigosas270.
+
+casasperigosas0:-
+    perigosas(P),
+    posicao([X,Y]),
+    X<4,
+    Z is X+1,
+    not(member([Z,Y],P)),
+    append(P,[[Z,Y]],P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)).
+casasperigosas0.
+
+casasperigosas90:-
+    perigosas(P),
+    posicao([X,Y]),
+    Y<4,
+    Z is Y+1,
+    not(member([X,Z],P)),
+    append(P,[[X,Z]],P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)).
+casasperigosas90.
+
+casasperigosas180:-
+    perigosas(P),
+    posicao([X,Y]),
+    X>1,
+    Z is X-1,
+    not(member([Z,Y],P)),
+    append(P,[[Z,Y]],P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)).
+casasperigosas180.
+
+casasperigosas270:-
+    perigosas(P),
+    posicao([X,Y]),
+    Y>1,
+    Z is Y-1,
+    not(member([X,Z],P)),
+    append(P,[[X,Z]],P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)).
+casasperigosas270.
 
 %funcao para calcular as casas seguras que o agente ainda nao esteve
 naovisitou(posicao, L, [no,no,_,_,_]):- %agente nao sente vento ou fedor
@@ -438,23 +553,6 @@ listavisita(V1):-
     retractall(visitar(_)),
     assert(visitar(L2)).
 
-
-%funcao para calcular as casas seguras
-casasegura(posicao, A, [no,no,_,_,_]) :- %agente nao sente vento ou fedor
-    append([posicao],A,L), 
-    list_to_set(L,L1),
-    listasegura(L1).
-
-casasegura(posicao, _, [_,_,_,no,_]) :- %se sentisse a trombada estaria salvando a mesma casa duas vezes como segura
-    L1=[posicao],
-    listasegura(L1).
-
-listasegura(L1):-
-    seguras(S),
-    append(L1, S, Seg),
-    list_to_set(Seg,Seg1),
-    retractall(seguras(_)),
-    assert(seguras(Seg1)).
     
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
