@@ -1,3 +1,12 @@
+%wumpusgrp2
+%Disciplina: Logica Matematica
+%Professor: Ruben Carlo Benante
+%Autores: Guido de Lyra Ferrario (email: guido_ferrario@hotmail.com)
+%         Hericles Gabriel Escoteiro e Silva (email: hhericles@hotmail.com)
+%         Jorge Edson Ribeiro da Silva Neto (email: jorge.ed.ribeiro00@gmail.com)
+%         Matheus Pontes Agostinho (email: matheuspontes96@hotmail.com)
+% Para mais informacoes acessar a wiki no repositorio do github.
+
 % Some simple test agents.
 %
 % To define an agent within the navigate.pl scenario, define:
@@ -250,7 +259,7 @@ coragem([_,no,no,no,_], goforward):- %agente anda se nao sentir brisa e o wumpus
     mudacasa,
     versegura.
     
-%agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
+%agente deve andar pelas casas seguras
 coragem(_, Acao):-
     posicao([X,Y]),
     seguras(T),
@@ -298,7 +307,8 @@ coragem(_, goforward):-
 
 acao(D,Angulo2,turnleft):-
     D\==Angulo2,
-    mudadadiresq.
+    mudadadiresq,
+    roda.
 
 acao(D,Angulo2,goforward):-
     D==Angulo2,
