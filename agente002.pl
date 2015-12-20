@@ -42,7 +42,6 @@
            casaanterior/1,
            visitadas/1,
            perigosas/1,
-           turista/1,
            alvo/1,
            giro/1]).
 
@@ -59,7 +58,6 @@ init_agent:-
     retractall(seguras(_)),
     retractall(visitadas(_)),
     retractall(perigosas(_)),
-    retractall(turista(_)),
     retractall(alvo(_)),
     retractall(giro(_)),
     assert(posicao([1,1])), %agente inicia na casa [1,1]
@@ -72,7 +70,6 @@ init_agent:-
     assert(seguras([[1,1]])), %informa as casas que sao seguras
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
     assert(perigosas([])), %informa as casas que oferecem risco ao agente
-    assert(turista([])), %casas seguras que o agente ainda nao visitou.
     assert(alvo([])), %casa-alvo do agente
     assert(giro(0)). %aumenta quando o agente realiza turnleft ou turnright
 
@@ -113,6 +110,9 @@ run_agent(Percepcao, Acao) :-
     perigosas(Cp),
     write('Lista de casas perigosas: '), %informa as casas perigosas
     writeln(Cp),
+    alvo(Alvo),
+    write('Meu alvo eh a casa: '),
+    writeln(Alvo),
     ouro(O),
     write('Quantidade de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
@@ -165,6 +165,36 @@ coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(perigosas(_)),
     assert(perigosas(P1)).
 
+coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
+    posicao([1,1]),
+    ouro(1),
+    write('Partiu!!!'),nl.
+coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
+    posicao([1,1]),
+    wumpus(morto),
+    write('Aqui eh perigoso demais pra mim, vou nessa!'),nl.
+
+coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
+    giro(G),
+    G==2, 
+    retractall(giro(_)),
+    assert(giro(0)),
+    mudacasa.
+
+coragem([yes,no,no,no,no], turnleft):- %agnte vira ao sentir perigo
+    mudadiresq,
+    roda,
+    verperigosas.
+
+coragem([no,yes,no,no,no], turnleft):- %agente vira ao sentir perigo
+    mudadiresq,
+    roda,
+    verperigosas.
+
+coragem([no,no,no,no,no], goforward):- %se o agente nao sentir nenhuma ameaca e estiver proximo a uma casa segura ele anda
+    mudacasa,
+    versegura,
+    target.
 
 coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
     posicao([4,1]),
@@ -215,36 +245,11 @@ coragem([_,_,no,yes,no], turnright):-
     mudadirdir,
     roda.
 
-coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
-    posicao([1,1]),
-    ouro(1),
-    write('Partiu!!!'),nl.
-coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
-    posicao([1,1]),
-    wumpus(morto).
-
-coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
-    giro(G),
-    G==2, 
-    retractall(giro(_)),
-    assert(giro(0)),
-    mudacasa.
-
-coragem([yes,no,no,no,no], turnleft):- %agnte vira ao sentir perigo
-    mudadiresq,
-    roda,
-    verperigosas.
-
-coragem([no,yes,no,no,no], turnleft):- %agente vira ao sentir perigo
-    mudadiresq,
-    roda,
-    verperigosas.
-
-coragem([no,no,no,no,no], goforward):- %se o agente nao sentir nenhuma ameaca e estiver proximo a uma casa segura ele anda
+coragem([_,no,no,no,_], goforward):- %agente anda se nao sentir brisa e o wumpus estiver morto
+    wumpus(morto),
     mudacasa,
     versegura.
-
-
+    
 %agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
 coragem(_, Acao):-
     posicao([X,Y]),
@@ -645,12 +650,10 @@ decflecha:- %funcao para diminuir numero de flechas apos o tiro
     retractall(flecha(_)),
     assert(flecha(X1)).
 
-target:-
-    visitadas(V),
-    seguras(S),
+target:- %funcao para definir uma casa-alvo ao agente002
+    seguras([S|_]),
     retractall(alvo(_)),
-    subtract(S,V, A),
-    assert(alvo(A)).
+    assert(alvo(S)).
 
 %funcoes para calcular as casas adjacentes
 cima([H, T], L1):-
