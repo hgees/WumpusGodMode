@@ -190,12 +190,12 @@ coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
     assert(giro(0)),
     mudacasa.
 
-coragem([yes,no,no,no,no], turnleft):- %agnte vira ao sentir perigo
+coragem([yes,_,_,_,_], turnleft):- %agnte vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
 
-coragem([no,yes,no,no,no], turnleft):- %agente vira ao sentir perigo
+coragem([_,yes,_,_,_], turnleft):- %agente vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
@@ -525,71 +525,14 @@ casasvisitadas :- %funcao que salva casas visitadas
 
 %funcao para calcular casas seguras
 versegura:-
-    casasegura0,
-    casasegura90,
-    casasegura180,
-    casasegura270,
-    tiraperigosas,
-    reduz.
-
-casasegura0:-
     seguras(S),
     posicao([X,Y]),
-    X<4,
-    Z is X+1,
-    not(member([Z,Y], S)),
-    append(S,[[Z,Y]],S1),
+    adjacentes([X,Y], L),
     retractall(seguras(_)),
-    assert(seguras(S1)).
-casasegura0.
-
-casasegura90:-
-    seguras(S),
-    posicao([X,Y]),
-    Y<4,
-    Z is Y+1,
-    not(member([X,Z], S)),
-    append(S,[[X,Z]],S1),
-    retractall(seguras(_)),
-    assert(seguras(S1)).
-casasegura90.
-
-casasegura180:-
-    seguras(S),
-    posicao([X,Y]),
-    X>1,
-    Z is X-1,
-    not(member([Z,Y], S)),
-    append(S,[[Z,Y]],S1),
-    retractall(seguras(_)),
-    assert(seguras(S1)).
-casasegura180.
-
-casasegura270:-
-    seguras(S),
-    posicao([X,Y]),
-    Y>1,
-    Z is Y-1,
-    not(member([X,Z], S)),
-    append(S,[[X,Z]],S1),
-    retractall(seguras(_)),
-    assert(seguras(S1)).
-casasegura270.
-
-tiraperigosas:-
-    seguras(S),
-    perigosas(P),
-    subtract(S,P, L),
-    retractall(seguras(_)),
-    assert(seguras(L)).
-tiraperigosas.
-
-reduz:-
-    seguras(S),
-    list_to_set(S,S1),
-    retractall(seguras(_)),
-    assert(seguras(S1)).
-reduz.
+    append(L,S, S1),
+    append([X,Y], S1, S2),
+    list_to_set(S2, S3),
+    assert(seguras(S3)).
 
 
 %funcao para calcular casas que oferecem risco ao agente
