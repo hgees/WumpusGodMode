@@ -117,7 +117,7 @@ run_agent(Percepcao, Acao) :-
     write('Quantidade de ouro: '), %informa o numero de ouro do agente 
     writeln(O),
     wumpus(V),
-    write('Condicao do Wumpus: '), %informa a condicao do wumpus 
+    write('Condicao do Wumpus: '), %informa a saude do wumpus 
     writeln(V),
     flecha(F),
     write('Flechas disponiveis: '), %quantidade de flechas disponiveis para tiro 
