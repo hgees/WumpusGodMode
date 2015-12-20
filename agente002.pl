@@ -150,7 +150,7 @@ coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpu
     retractall(flecha(_)),
     assert(flecha(0)).
 
-coragem([_,_,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
+coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)), %adicionar casa do wumpus como segura.
     write('Acabou cao, agente002 chegou!!!'),nl,
@@ -514,6 +514,7 @@ versegura:-
     casasegura90,
     casasegura180,
     casasegura270,
+    tiraperigosas,
     reduz.
 
 casasegura0:-
@@ -521,7 +522,7 @@ casasegura0:-
     posicao([X,Y]),
     X<4,
     Z is X+1,
-    not(member([Z,Y],S)),
+    not(member([Z,Y], S)),
     append(S,[[Z,Y]],S1),
     retractall(seguras(_)),
     assert(seguras(S1)).
@@ -532,8 +533,8 @@ casasegura90:-
     posicao([X,Y]),
     Y<4,
     Z is Y+1,
-    not(member([X,Z],S)),
-    append(S,[[Z,Y]],S1),
+    not(member([X,Z], S)),
+    append(S,[[X,Z]],S1),
     retractall(seguras(_)),
     assert(seguras(S1)).
 casasegura90.
@@ -543,7 +544,7 @@ casasegura180:-
     posicao([X,Y]),
     X>1,
     Z is X-1,
-    not(member([Z,Y],S)),
+    not(member([Z,Y], S)),
     append(S,[[Z,Y]],S1),
     retractall(seguras(_)),
     assert(seguras(S1)).
@@ -554,11 +555,19 @@ casasegura270:-
     posicao([X,Y]),
     Y>1,
     Z is Y-1,
-    not(member([X,Z],S)),
+    not(member([X,Z], S)),
     append(S,[[X,Z]],S1),
     retractall(seguras(_)),
     assert(seguras(S1)).
 casasegura270.
+
+tiraperigosas:-
+    seguras(S),
+    perigosas(P),
+    subtract(S,P, L),
+    retractall(seguras(_)),
+    assert(seguras(L)).
+tiraperigosas.
 
 reduz:-
     seguras(S),
@@ -566,6 +575,7 @@ reduz:-
     retractall(seguras(_)),
     assert(seguras(S1)).
 reduz.
+
 
 %funcao para calcular casas que oferecem risco ao agente
 verperigosas:-
@@ -580,7 +590,7 @@ casasperigosas0:-
     posicao([X,Y]),
     X<4,
     Z is X+1,
-    not(member([Z,Y],P)),
+    not(member([Z,Y], P)),
     append(P,[[Z,Y]],P1),
     retractall(perigosas(_)),
     assert(perigosas(P1)).
@@ -591,7 +601,7 @@ casasperigosas90:-
     posicao([X,Y]),
     Y<4,
     Z is Y+1,
-    not(member([X,Z],P)),
+    not(member([X,Z], P)),
     append(P,[[X,Z]],P1),
     retractall(perigosas(_)),
     assert(perigosas(P1)).
@@ -602,7 +612,7 @@ casasperigosas180:-
     posicao([X,Y]),
     X>1,
     Z is X-1,
-    not(member([Z,Y],P)),
+    not(member([Z,Y], P)),
     append(P,[[Z,Y]],P1),
     retractall(perigosas(_)),
     assert(perigosas(P1)).
@@ -613,7 +623,7 @@ casasperigosas270:-
     posicao([X,Y]),
     Y>1,
     Z is Y-1,
-    not(member([X,Z],P)),
+    not(member([X,Z], P)),
     append(P,[[X,Z]],P1),
     retractall(perigosas(_)),
     assert(perigosas(P1)).
@@ -623,10 +633,8 @@ tirasegurasvisitadas:-
     perigosas(P),
     seguras(S),
     visitadas(V),
-    subtract(P, V, P1),
-    retractall(perigosas(_)),
-    assert(perigosas(P1)),
-    subtract(P1, S, P2),
+    subtract(P,S, P1),
+    subtract(P1,V, P2),
     retractall(perigosas(_)),
     assert(perigosas(P2)).
 tirasegurasvisitadas.
