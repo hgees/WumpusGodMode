@@ -527,16 +527,16 @@ casafrente :-
     assert(frente([X,Y1])).
 
 casafrente:-
-    posicao([X,_]),
+    posicao([X,Y]),
     X==4,
     retractall(frente(_)),
-    assert(frente([0,0])).
+    assert(frente([X,Y])).
 
 casafrente:-
-    posicao([_,Y]),
+    posicao([X,Y]),
     Y==4,
     retractall(frente(_)),
-    assert(frente([0,0])).
+    assert(frente([X,Y])).
 
 casasvisitadas :- %funcao que salva casas visitadas
    visitadas(V),
