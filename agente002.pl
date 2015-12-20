@@ -148,7 +148,7 @@ roda:- %conta o numero de giros
 %inteligencia do agente002, com base em suas prioridades.
 coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
     retractall(ouro(_)),
-    assert(ouro(1)),
+    assert(ouro(1)),nl,
     write('MAOE! Agora eu tenho barras de ouro!!!'),nl.
 
 coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
@@ -161,7 +161,7 @@ coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpu
 
 coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
-    assert(wumpus(morto)), %adicionar casa do wumpus como segura.
+    assert(wumpus(morto)),nl, %adicionar casa do wumpus como segura.
     write('Acabou cao, agente002 chegou!!!'),nl,
     posicao(P),
     adjacentes(P, L),
@@ -176,11 +176,11 @@ coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
 
 coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
     posicao([1,1]),
-    ouro(1),
+    ouro(1),nl,
     write('Partiu!!!'),nl.
 coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
     posicao([1,1]),
-    wumpus(morto),
+    wumpus(morto),nl,
     write('Aqui eh perigoso demais pra mim, vou nessa!'),nl.
 
 coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
@@ -594,65 +594,16 @@ reduz.
 
 %funcao para calcular casas que oferecem risco ao agente
 verperigosas:-
-    casasperigosas0,
-    casasperigosas90,
-    casasperigosas180,
-    casasperigosas270,
-    tirasegurasvisitadas.
-
-casasperigosas0:-
-    perigosas(P),
-    posicao([X,Y]),
-    X<4,
-    Z is X+1,
-    not(member([Z,Y], P)),
-    append(P,[[Z,Y]],P1),
-    retractall(perigosas(_)),
-    assert(perigosas(P1)).
-casasperigosas0.
-
-casasperigosas90:-
-    perigosas(P),
-    posicao([X,Y]),
-    Y<4,
-    Z is Y+1,
-    not(member([X,Z], P)),
-    append(P,[[X,Z]],P1),
-    retractall(perigosas(_)),
-    assert(perigosas(P1)).
-casasperigosas90.
-
-casasperigosas180:-
-    perigosas(P),
-    posicao([X,Y]),
-    X>1,
-    Z is X-1,
-    not(member([Z,Y], P)),
-    append(P,[[Z,Y]],P1),
-    retractall(perigosas(_)),
-    assert(perigosas(P1)).
-casasperigosas180.
-
-casasperigosas270:-
-    perigosas(P),
-    posicao([X,Y]),
-    Y>1,
-    Z is Y-1,
-    not(member([X,Z], P)),
-    append(P,[[X,Z]],P1),
-    retractall(perigosas(_)),
-    assert(perigosas(P1)).
-casasperigosas270.
-
-tirasegurasvisitadas:-
-    perigosas(P),
     seguras(S),
-    visitadas(V),
-    subtract(P,S, P1),
-    subtract(P1,V, P2),
+    perigosas(P),
+    posicao([X,Y]),
+    adjacentes([X,Y], L),
     retractall(perigosas(_)),
-    assert(perigosas(P2)).
-tirasegurasvisitadas.
+    subtract(L, S, P1),
+    append(P,P1, P2),
+    list_to_set(P2, P3),
+    assert(perigosas(P3)).
+    
     
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
