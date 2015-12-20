@@ -73,8 +73,8 @@ init_agent:-
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
     assert(perigosas([])), %informa as casas que oferecem risco ao agente
     assert(turista([])), %casas seguras que o agente ainda nao visitou.
-    assert(alvo([])),
-    assert(giro(0)).
+    assert(alvo([])), %casa-alvo do agente
+    assert(giro(0)). %aumenta quando o agente realiza turnleft ou turnright
 
 % esta funcao permanece a mesma. Nao altere.
 restart_agent :- 
@@ -99,12 +99,14 @@ run_agent(Percepcao, Acao) :-
     write('A casa a frente e: '), %informa a casa a frente, dependendo da direcao do agente
     writeln(Af),
     casaanterior(Ca),
+    casafrente,
     write('A casa anterior era: '), %informa a ultima casa que o agente esteve
     writeln(Ca),
     seguras(Cs),
     write('Lista de casas seguras: '), %informa as casas que nao orferecem risco ao agente
     writeln(Cs),
     visitadas(Cv),
+    versegura,
     write('Lista de casas visitadas: '), %informa as casas que o agente ja visitou
     writeln(Cv),
     casasvisitadas,
@@ -221,151 +223,166 @@ coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e 
     posicao([1,1]),
     wumpus(morto).
 
-coragem(_, goforward):-
+coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
     giro(G),
-    G==2,
+    G==2, 
     retractall(giro(_)),
     assert(giro(0)),
     mudacasa.
 
-coragem([yes,no,no,no,no], turnleft):-
+coragem([yes,no,no,no,no], turnleft):- %agnte vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
 
-coragem([no,yes,no,no,no], turnleft):-
+coragem([no,yes,no,no,no], turnleft):- %agente vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
 
-coragem([no,no,no,no,no], goforward):-
+coragem([no,no,no,no,no], goforward):- %se o agente nao sentir nenhuma ameaca e estiver proximo a uma casa segura ele anda
     mudacasa,
     versegura.
-%    reduz.
 
 
 %agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
-%coragem(_, Acao):-
-%    posicao([X,Y]),
-%    turista(T),
-%    direcao(D),
-%    D==0,
-%    Z is X+1,
-%    member([Z,Y],T),
-%    acao(D,0,Acao).
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(T),
+    direcao(D),
+    D==0,
+    Z is X+1,
+    member([Z,Y],T),
+    acao(D,0,Acao).
 
-%coragem(_, Acao):-
-%    posicao([X,Y]),
-%    turista(T),
-%    direcao(D),
-%    D==90,
-%    Z is Y+1,
-%    member([X,Z],T),
-%    acao(D,90,Acao).
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(T),
+    direcao(D),
+    D==90,
+    Z is Y+1,
+    member([X,Z],T),
+    acao(D,90,Acao).
 
-%coragem(_, Acao):-
-%    posicao([X,Y]),
-%   turista(T),
-%   direcao(D),
-%   D==180,
-%   Z is X-1,
-%   member([Z,Y],T),
-%   acao(D,180,Acao).
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(T),
+    direcao(D),
+    D==180,
+    Z is X-1,
+    member([Z,Y],T),
+    acao(D,180,Acao).
 
-%coragem(_, Acao):-
-%   posicao([X,Y]),
-%   turista(T),
-%    direcao(D),
-%   D==270,
-%   Z is Y-1,
-%   member([X,Z],T),
-%   acao(D,270,Acao).
+coragem(_, Acao):-
+    posicao([X,Y]),
+    seguras(T),
+    direcao(D),
+    D==270,
+    Z is Y-1,
+    member([X,Z],T),
+    acao(D,270,Acao).
 
-%coragem(_, goforward):-
-%   posicao([X,Y]),
-%   direcao(Angulo),
-%   seguras(S),
-%   Angulo==0,
-%   Z is X+1,
-%    member([Z,Y],S),
-%   mudacasa.
+coragem(_, goforward):-
+    posicao([X,Y]),
+    direcao(Angulo),
+    seguras(S),
+    Angulo==0,
+    Z is X+1,
+    member([Z,Y],S),
+    mudacasa.
 
-%acao(D,Angulo2,turnleft):-
-%   D\==Angulo2,
-%   mudadadiresq.
-%
-%acao(D,Angulo2,goforward):-
-%   D==Angulo2,
-%   mudacasa.
-%
+acao(D,Angulo2,turnleft):-
+    D\==Angulo2,
+    mudadadiresq.
+
+acao(D,Angulo2,goforward):-
+    D==Angulo2,
+    mudacasa.
+
 %calculando a acao, com base no issue criado em 15-12-2015 
 %acoes para o agente andar para frente, com base em sua direcao.
 %   (posicao,angulo,alvo,acao)
-%pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
-%    X<X2,
-%   antes,
-%   mudacasa.
+pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
+    X<X2,
+    posicao([X,Y]),
+    X<4,
+    seguras(S),
+    X2 is X+1,
+    member([X2,Y],S),
+    mudacasa.
 
-%pense([X,Y], 90, [X,Y2], goforward):- %angulo=90
-%   Y<Y2,
-%   antes,
-%   mudacasa.
+pense([X,Y], 90, [X,Y2], goforward):- %angulo=90
+    Y<Y2,
+    posicao([X,Y]),
+    Y<4,
+    seguras(S),
+    Y2 is Y+1,
+    member([X,Y2],S),
+    mudacasa.
 
-%pense([X,Y], 180, [X2,Y], goforward):- %angulo=180
-%   X>X2,
-%   antes,
-%   mudacasa.
+pense([X,Y], 180, [X2,Y], goforward):- %angulo=180
+    X>X2,
+    posicao([X,Y]),
+    X>1,
+    seguras(S),
+    X2 is X-1,
+    member([X2,Y],S),
+    mudacasa.
 
-%pense([X,Y], 270, [X,Y2], goforward):- %angulo=270
-%   Y>Y2,
-%   antes,
-%   mudacasa.
+pense([X,Y], 270, [X,Y2], goforward):- %angulo=270
+    Y>Y2,
+    posicao([X,Y]),
+    Y>1,
+    seguras(S),
+    Y2 is Y-1,
+    member([X,Y2],S),
+    mudacasa.
 
 
 %para angulo=0 (virado para direita)
-%pense([X,Y], 0, [X2,Y], turnleft):-
-%   X>X2,
-%   mudadiresq.
-%pense([X,Y], 0, [X,Y2], turnright):-
-%    Y>Y2,
-%   mudadirdir.
-%pense([X,Y], 0, [X,Y2], turnleft):-
-%   Y<Y2,
-%   mudadiresq.
+pense([X,Y], 0, [X2,Y], turnleft):-
+    X>X2,
+    mudadiresq.
+pense([X,Y], 0, [X,Y2], turnright):-
+    Y>Y2,
+   mudadirdir.
+pense([X,Y], 0, [X,Y2], turnleft):-
+    Y<Y2,
+    mudadiresq.
 
 %para angulo=90 (virado para cima)
-%pense([X,Y], 90, [X2,Y], turnleft):-
-%   X>X2,
-%   mudadiresq.
-%pense([X,Y], 90, [X2,Y], turnright):-
-%    X<X2,
-%   mudadirdir.
-%pense([X,Y], 90, [X,Y2], turnleft):-
-%  Y>Y2,
-%  mudadiresq.
+pense([X,Y], 90, [X2,Y], turnleft):-
+    X>X2,
+    mudadiresq.
+pense([X,Y], 90, [X2,Y], turnright):-
+    X<X2,
+    mudadirdir.
+pense([X,Y], 90, [X,Y2], turnleft):-
+    Y>Y2,
+    mudadiresq.
 
 %para angulo=180 (virado para a esquerda)
-%pense([X,Y], 180, [X2,Y], turnleft):-
-%   X<X2,
-%  mudadiresq.
-%pense([X,Y], 180, [X,Y2], turnright):-
-%    Y<Y2,
-%   mudadirdir.
+pense([X,Y], 180, [X2,Y], turnleft):-
+    X<X2,
+    mudadiresq.
+pense([X,Y], 180, [X,Y2], turnright):-
+    Y<Y2,
+    mudadirdir.
     
-%pense([X,Y], 180, [X,Y2], turnleft):-
-%   Y>Y2,
-%   mudadiresq.
+pense([X,Y], 180, [X,Y2], turnleft):-
+    Y>Y2,
+    mudadiresq.
 
 %para angulo=270 (virado para baixo)
-%pense([X,Y], 270, [X2,Y], turnleft):-
-%   X<X2,
-%   mudadiresq.
-%pense([X,Y], 270, [X2,Y], turnright):-
-%   X>X2,
-%   mudadirdir.
-%pense([X,Y], 270, [X,Y2], turnleft):-
-%   Y<Y2,
-%   mudadiresq.
+pense([X,Y], 270, [X2,Y], turnleft):-
+    X<X2,
+    mudadiresq.
+pense([X,Y], 270, [X2,Y], turnright):-
+    X>X2,
+    mudadirdir.
+pense([X,Y], 270, [X,Y2], turnleft):-
+    Y<Y2,
+    mudadiresq.
 
 
 
@@ -496,7 +513,8 @@ versegura:-
     casasegura0,
     casasegura90,
     casasegura180,
-    casasegura270.
+    casasegura270,
+    reduz.
 
 casasegura0:-
     seguras(S),
@@ -542,13 +560,12 @@ casasegura270:-
     assert(seguras(S1)).
 casasegura270.
 
-%reduz:-
-%   seguras(S),
-%   posicao([X,Y]),
-%   delete(S,[X,Y],S1),
-%   delete(S1,[X,Y],S2),
-%   retractall(seguras(_)),
-%   assert(seguras(S2)).
+reduz:-
+    seguras(S),
+    list_to_set(S,S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)).
+reduz.
 
 %funcao para calcular casas que oferecem risco ao agente
 verperigosas:-
@@ -612,6 +629,7 @@ tirasegurasvisitadas:-
     subtract(P1, S, P2),
     retractall(perigosas(_)),
     assert(perigosas(P2)).
+tirasegurasvisitadas.
     
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
