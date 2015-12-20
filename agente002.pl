@@ -67,7 +67,7 @@ init_agent:-
     assert(flecha(1)), %agente inicia com uma flecha.
     assert(direcao(0)), %agente inicia na direcao 0 grau (virado para direirta)
     assert(wumpus(vivo)), %wumpus inicia vivo
-    assert(frente([])), %informa a casa a frente do agente, dependendo de sua orientacao
+    assert(frente([2,1])), %informa a casa a frente do agente, dependendo de sua orientacao
     assert(casaanterior([])),%início de casas anteriores
     assert(seguras([[1,1]])), %informa as casas que sao seguras
     assert(visitadas([[1,1]])), %informa as casas em que o agente ja esteve
@@ -128,7 +128,7 @@ run_agent(Percepcao, Acao) :-
 % 180-> esquerda,
 % 270-> baixo.
 
-roda:-
+roda:- %conta o numero de giros
     giro(G),
     G1 is G+1,
     retractall(giro(_)),
@@ -150,15 +150,73 @@ coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpu
 
 coragem([_,_,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
-    assert(wumpus(morto)). %adicionar casa do wumpus como segura.
+    assert(wumpus(morto)), %adicionar casa do wumpus como segura.
+    write('Acabou cao, agente002 chegou!!!'),nl,
+    posicao(P),
+    adjacentes(P, L),
+    seguras(S),
+    perigosas(Cp),
+    append(L, S, S1),
+    retractall(seguras(_)),
+    assert(seguras(S1)),
+    subtract(Cp, S1, P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)).
 
 
 coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
-    mudadiresq.
+    posicao([4,1]),
+    direcao(Angulo),
+    Angulo==0,
+    mudadiresq,
+    roda.
+coragem([_,_,no,yes,no], turnright):-
+    posicao([1,1]),
+    direcao(Angulo),
+    Angulo==180,
+    mudadirdir,
+    roda.
+coragem([_,_,no,yes,no], turnright):-
+    posicao([4,1]),
+    direcao(Angulo),
+    Angulo==270,
+    mudadirdir,
+    roda.
+coragem([_,_,no,yes,no], turnleft):-
+    posicao([1,1]),
+    direcao(Angulo),
+    Angulo=270,
+    mudadiresq,
+    roda.
+coragem([_,_,no,yes,no], turnright):-
+    posicao([1,4]),
+    direcao(Angulo),
+    Angulo==90,
+    mudadirdir,
+    roda.
+coragem([_,_,no,yes,no], turnleft):-
+    posicao([1,4]),
+    direcao(Angulo),
+    Angulo==180,
+    mudadiresq,
+    roda.
+coragem([_,_,no,yes,no], turnleft):-
+    posicao([4,4]),
+    direcao(Angulo),
+    Angulo==90,
+    mudadiresq,
+    roda.
+coragem([_,_,no,yes,no], turnright):-
+    posicao([4,4]),
+    direcao(Angulo),
+    Angulo==0,
+    mudadirdir,
+    roda.
 
 coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
     posicao([1,1]),
-    ouro(1).
+    ouro(1),
+    write('Partiu!!!'),nl.
 coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
     posicao([1,1]),
     wumpus(morto).
@@ -183,130 +241,131 @@ coragem([no,yes,no,no,no], turnleft):-
 coragem([no,no,no,no,no], goforward):-
     mudacasa,
     versegura.
+%    reduz.
 
 
 %agente deve andar pelas casas seguras @@@@@@@SEGURAS QUE AINDA N FORAM VISITADAS, E DEPOIS RETORNAR PELAS SEGURAS VISITADAS@@@@@@@@
-coragem(_, Acao):-
-    posicao([X,Y]),
-    turista(T),
-    direcao(D),
-    D==0,
-    Z is X+1,
-    member([Z,Y],T),
-    acao(D,0,Acao).
+%coragem(_, Acao):-
+%    posicao([X,Y]),
+%    turista(T),
+%    direcao(D),
+%    D==0,
+%    Z is X+1,
+%    member([Z,Y],T),
+%    acao(D,0,Acao).
 
-coragem(_, Acao):-
-    posicao([X,Y]),
-    turista(T),
-    direcao(D),
-    D==90,
-    Z is Y+1,
-    member([X,Z],T),
-    acao(D,90,Acao).
+%coragem(_, Acao):-
+%    posicao([X,Y]),
+%    turista(T),
+%    direcao(D),
+%    D==90,
+%    Z is Y+1,
+%    member([X,Z],T),
+%    acao(D,90,Acao).
 
-coragem(_, Acao):-
-    posicao([X,Y]),
-    turista(T),
-    direcao(D),
-    D==180,
-    Z is X-1,
-    member([Z,Y],T),
-    acao(D,180,Acao).
+%coragem(_, Acao):-
+%    posicao([X,Y]),
+%   turista(T),
+%   direcao(D),
+%   D==180,
+%   Z is X-1,
+%   member([Z,Y],T),
+%   acao(D,180,Acao).
 
-coragem(_, Acao):-
-    posicao([X,Y]),
-    turista(T),
-    direcao(D),
-    D==270,
-    Z is Y-1,
-    member([X,Z],T),
-    acao(D,270,Acao).
+%coragem(_, Acao):-
+%   posicao([X,Y]),
+%   turista(T),
+%    direcao(D),
+%   D==270,
+%   Z is Y-1,
+%   member([X,Z],T),
+%   acao(D,270,Acao).
 
-coragem(_, goforward):-
-    posicao([X,Y]),
-    direcao(Angulo),
-    seguras(S),
-    Angulo==0,
-    Z is X+1,
-    member([Z,Y],S),
-    mudacasa.
+%coragem(_, goforward):-
+%   posicao([X,Y]),
+%   direcao(Angulo),
+%   seguras(S),
+%   Angulo==0,
+%   Z is X+1,
+%    member([Z,Y],S),
+%   mudacasa.
 
-acao(D,Angulo2,turnleft):-
-    D\==Angulo2,
-    mudadadiresq.
-
-acao(D,Angulo2,goforward):-
-    D==Angulo2,
-    mudacasa.
-
+%acao(D,Angulo2,turnleft):-
+%   D\==Angulo2,
+%   mudadadiresq.
+%
+%acao(D,Angulo2,goforward):-
+%   D==Angulo2,
+%   mudacasa.
+%
 %calculando a acao, com base no issue criado em 15-12-2015 
 %acoes para o agente andar para frente, com base em sua direcao.
 %   (posicao,angulo,alvo,acao)
-pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
-    X<X2,
-    antes,
-    mudacasa.
+%pense([X,Y], 0, [X2,Y], goforward):- %angulo=0
+%    X<X2,
+%   antes,
+%   mudacasa.
 
-pense([X,Y], 90, [X,Y2], goforward):- %angulo=90
-    Y<Y2,
-    antes,
-    mudacasa.
+%pense([X,Y], 90, [X,Y2], goforward):- %angulo=90
+%   Y<Y2,
+%   antes,
+%   mudacasa.
 
-pense([X,Y], 180, [X2,Y], goforward):- %angulo=180
-    X>X2,
-    antes,
-    mudacasa.
+%pense([X,Y], 180, [X2,Y], goforward):- %angulo=180
+%   X>X2,
+%   antes,
+%   mudacasa.
 
-pense([X,Y], 270, [X,Y2], goforward):- %angulo=270
-    Y>Y2,
-    antes,
-    mudacasa.
+%pense([X,Y], 270, [X,Y2], goforward):- %angulo=270
+%   Y>Y2,
+%   antes,
+%   mudacasa.
 
 
 %para angulo=0 (virado para direita)
-pense([X,Y], 0, [X2,Y], turnleft):-
-    X>X2,
-    mudadiresq.
-pense([X,Y], 0, [X,Y2], turnright):-
-    Y>Y2,
-    mudadirdir.
-pense([X,Y], 0, [X,Y2], turnleft):-
-    Y<Y2,
-    mudadiresq.
+%pense([X,Y], 0, [X2,Y], turnleft):-
+%   X>X2,
+%   mudadiresq.
+%pense([X,Y], 0, [X,Y2], turnright):-
+%    Y>Y2,
+%   mudadirdir.
+%pense([X,Y], 0, [X,Y2], turnleft):-
+%   Y<Y2,
+%   mudadiresq.
 
 %para angulo=90 (virado para cima)
-pense([X,Y], 90, [X2,Y], turnleft):-
-    X>X2,
-    mudadiresq.
-pense([X,Y], 90, [X2,Y], turnright):-
-    X<X2,
-    mudadirdir.
-pense([X,Y], 90, [X,Y2], turnleft):-
-   Y>Y2,
-   mudadiresq.
+%pense([X,Y], 90, [X2,Y], turnleft):-
+%   X>X2,
+%   mudadiresq.
+%pense([X,Y], 90, [X2,Y], turnright):-
+%    X<X2,
+%   mudadirdir.
+%pense([X,Y], 90, [X,Y2], turnleft):-
+%  Y>Y2,
+%  mudadiresq.
 
 %para angulo=180 (virado para a esquerda)
-pense([X,Y], 180, [X2,Y], turnleft):-
-    X<X2,
-   mudadiresq.
-pense([X,Y], 180, [X,Y2], turnright):-
-    Y<Y2,
-    mudadirdir.
+%pense([X,Y], 180, [X2,Y], turnleft):-
+%   X<X2,
+%  mudadiresq.
+%pense([X,Y], 180, [X,Y2], turnright):-
+%    Y<Y2,
+%   mudadirdir.
     
-pense([X,Y], 180, [X,Y2], turnleft):-
-    Y>Y2,
-    mudadiresq.
+%pense([X,Y], 180, [X,Y2], turnleft):-
+%   Y>Y2,
+%   mudadiresq.
 
 %para angulo=270 (virado para baixo)
-pense([X,Y], 270, [X2,Y], turnleft):-
-    X<X2,
-    mudadiresq.
-pense([X,Y], 270, [X2,Y], turnright):-
-    X>X2,
-    mudadirdir.
-pense([X,Y], 270, [X,Y2], turnleft):-
-    Y<Y2,
-    mudadiresq.
+%pense([X,Y], 270, [X2,Y], turnleft):-
+%   X<X2,
+%   mudadiresq.
+%pense([X,Y], 270, [X2,Y], turnright):-
+%   X>X2,
+%   mudadirdir.
+%pense([X,Y], 270, [X,Y2], turnleft):-
+%   Y<Y2,
+%   mudadiresq.
 
 
 
@@ -390,38 +449,38 @@ antes :- %funcao que calcula a casa anterior
 casafrente :- %funcao para calcular casa a frente, dependendo da direcao do agente
     direcao(Angulo),
     Angulo == 0,
-    frente([X,Y]),
-    retractall([_]),
+    posicao([X,Y]),
+    X<4,
+    retractall(frente(_)),
     X1 is X+1,
-    Y1 is Y-1,
-    assert(frente([X1,Y1])).
+    assert(frente([X1,Y])).
 
 casafrente :-
     direcao(Angulo),
     Angulo == 90,
-    frente([X,Y]),
-    retractall([_]),
-    X1 is X+1,
+    posicao([X,Y]),
+    Y<4,
+    retractall(frente(_)),
     Y1 is Y+1,
-    assert(frente([X1,Y1])).
+    assert(frente([X,Y1])).
 
 casafrente :-
     direcao(Angulo),
     Angulo == 180,
-    frente([X,Y]),
-    retractall([_]),
+    posicao([X,Y]),
+    X>1,
+    retractall(frente(_)),
     X1 is X-1,
-    Y1 is Y+1,
-    assert(frente([X1,Y1])).
+    assert(frente([X1,Y])).
 
 casafrente :-
     direcao(Angulo),
     Angulo == 270,
-    frente([X,Y]),
-    retractall([_]),
-    X1 is X-1,
+    posicao([X,Y]),
+    Y>1,
+    retractall(frente(_)),
     Y1 is Y-1,
-    assert(frente([X1,Y1])).
+    assert(frente([X,Y1])).
 
 casasvisitadas :- %funcao que salva casas visitadas
    visitadas(V),
@@ -483,12 +542,21 @@ casasegura270:-
     assert(seguras(S1)).
 casasegura270.
 
+%reduz:-
+%   seguras(S),
+%   posicao([X,Y]),
+%   delete(S,[X,Y],S1),
+%   delete(S1,[X,Y],S2),
+%   retractall(seguras(_)),
+%   assert(seguras(S2)).
+
 %funcao para calcular casas que oferecem risco ao agente
 verperigosas:-
     casasperigosas0,
     casasperigosas90,
     casasperigosas180,
-    casasperigosas270.
+    casasperigosas270,
+    tirasegurasvisitadas.
 
 casasperigosas0:-
     perigosas(P),
@@ -534,25 +602,16 @@ casasperigosas270:-
     assert(perigosas(P1)).
 casasperigosas270.
 
-%funcao para calcular as casas seguras que o agente ainda nao esteve
-naovisitou(posicao, L, [no,no,_,_,_]):- %agente nao sente vento ou fedor
-    append([posicao],L,V), %posicao atual + adjacentes que nao oferecem risco
-    list_to_set(V,V1),
-    listavisita(V1).
-
-naovisitou(posicao, _, [_,_,_,no,_]):-
-    V1=[posicao], 
-    listavisita(V1).
-
-listavisita(V1):-
-    turista(T),
+tirasegurasvisitadas:-
+    perigosas(P),
+    seguras(S),
     visitadas(V),
-    append(T,V1,L1),
-    list_to_set(L1,L),
-    subtract(L,V,L2),
-    retractall(visitar(_)),
-    assert(visitar(L2)).
-
+    subtract(P, V, P1),
+    retractall(perigosas(_)),
+    assert(perigosas(P1)),
+    subtract(P1, S, P2),
+    retractall(perigosas(_)),
+    assert(perigosas(P2)).
     
 decflecha:- %funcao para diminuir numero de flechas apos o tiro
     flecha(X0),
