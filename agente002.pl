@@ -151,6 +151,11 @@ coragem([_,_,yes,_,_], grab):- %pega o ouro apos sentir o brilho
     assert(ouro(1)),nl,
     write('MAOE! Agora eu tenho barras de ouro!!!'),nl.
 
+coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
+    posicao([1,1]),
+    ouro(1),nl,
+    write('Partiu!!!'),nl.
+
 coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpus estiver vivo e tiver uma flecha 
     wumpus(vivo),
     flecha(X),
@@ -159,7 +164,13 @@ coragem([yes,no,no,no,_], shoot):- %atira em linha reta se sentir o fedor, wumpu
     retractall(flecha(_)),
     assert(flecha(0)).
 
-coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
+coragem([_,_,_,_,no], climb):-
+    posicao([1,1]),
+    flecha(0),
+    wumpus(vivo),nl,
+    write('Melhor eu ir nessa!'),nl.
+
+coragem([_,no,_,_,yes], goforward):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(wumpus(_)),
     assert(wumpus(morto)),nl, %adicionar casa do wumpus como segura.
     write('Acabou cao, agente002 chegou!!!'),nl,
@@ -174,10 +185,6 @@ coragem([_,no,_,_,yes], _):- %nao atirar quando ouvir o grito; wumpus morto
     retractall(perigosas(_)),
     assert(perigosas(P1)).
 
-coragem([_,_,_,_,_], climb):- %agente deve sair da caverna se estiver na casa [1,1] e tiver o ouro
-    posicao([1,1]),
-    ouro(1),nl,
-    write('Partiu!!!'),nl.
 coragem([_,_,_,_,_], climb):- %agente sai da caverna se estiver na casa [1,1] e wumpus estiver morto
     posicao([1,1]),
     wumpus(morto),nl,
@@ -190,12 +197,12 @@ coragem(_, goforward):- %impede que o agente002 entre em um loop infinito
     assert(giro(0)),
     mudacasa.
 
-coragem([yes,_,_,_,_], turnleft):- %agnte vira ao sentir perigo
+coragem([yes,no,_,_,_], turnleft):- %agnte vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
 
-coragem([_,yes,_,_,_], turnleft):- %agente vira ao sentir perigo
+coragem([no,yes,_,_,_], turnleft):- %agente vira ao sentir perigo
     mudadiresq,
     roda,
     verperigosas.
@@ -204,6 +211,11 @@ coragem([no,no,no,no,no], goforward):- %se o agente nao sentir nenhuma ameaca e 
     mudacasa,
     versegura,
     target.
+
+coragem([yes,no,no,no,no], goforward):- %apesar do fedor, wumpus esta morto e casa eh segura
+    wumpus(morto),
+    mudacasa.
+
 
 coragem([_,_,no,yes,no], turnleft):- %vira para a esquerda se trombar
     posicao([4,1]),
@@ -513,6 +525,18 @@ casafrente :-
     retractall(frente(_)),
     Y1 is Y-1,
     assert(frente([X,Y1])).
+
+casafrente:-
+    posicao([X,_]),
+    X==4,
+    retractall(frente(_)),
+    assert(frente([0,0])).
+
+casafrente:-
+    posicao([_,Y]),
+    Y==4,
+    retractall(frente(_)),
+    assert(frente([0,0])).
 
 casasvisitadas :- %funcao que salva casas visitadas
    visitadas(V),
