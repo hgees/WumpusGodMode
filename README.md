@@ -14,4 +14,4 @@ Guido de Lyra Ferrario (guido_ferrario@hotmail.com)
 
 ## Objetivo
 
-O grupo tem como objetivo a criação de um agente que deve sobreviver ao mundo de Wumpus criado pelo programa Wumpus1
+O grupo tem como objetivo a criação de um agente que deve sobreviver ao mundo de Wumpus criado pelo programa Wumpus1.pl
