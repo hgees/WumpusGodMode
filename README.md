@@ -2,6 +2,8 @@
 
 Repositório para o trabalho do Wumpus para a disciplina de Lógica Matemática do curso de Engenharia de Automação e Controle da UPE - Universidade de Pernambuco
 
+<http://hgees.github.io/WumpusGodMode/>
+
 ## Autores
 
 Hericles Gabriel Escoteiro e Silva (hhericles@hotmail.com)
